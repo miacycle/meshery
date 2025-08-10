@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/jarcoal/httpmock"
-	"github.com/layer5io/meshery/mesheryctl/pkg/utils"
+	"github.com/meshery/meshery/mesheryctl/pkg/utils"
 )
 
 func TestDesignCmd(t *testing.T) {
@@ -159,7 +159,7 @@ func TestDesignCmd(t *testing.T) {
 
 			// setting up log to grab logs
 			b := utils.SetupMeshkitLoggerTesting(t, false)
-			DesignCmd.SetOutput(b)
+			DesignCmd.SetOut(b)
 			DesignCmd.SetArgs(test.Args)
 			err := DesignCmd.Execute()
 			if err != nil {

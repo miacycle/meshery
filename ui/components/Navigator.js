@@ -1,15 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import RemoveIcon from '@mui/icons-material/Remove';
 import Link from 'next/link';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
-import { withRouter } from 'next/router';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import HelpIcon from '@mui/icons-material/Help';
 import LifecycleIcon from '../public/static/img/drawer-icons/lifecycle_mgmt_svg';
 import PerformanceIcon from '../public/static/img/drawer-icons/performance_svg';
 import ExtensionIcon from '../public/static/img/drawer-icons/extensions_svg';
-import FilterIcon from '../public/static/img/drawer-icons/filter_svg';
 import PatternIcon from '../public/static/img/drawer-icons/pattern_svg';
 import LifecycleHover from '../public/static/img/drawer-icons/lifecycle_hover_svg';
 import PerformanceHover from '../public/static/img/drawer-icons/performance_hover_svg';
@@ -22,19 +17,6 @@ import ChatIcon from '../assets/icons/ChatIcon';
 import ServiceMeshIcon from '../assets/icons/ServiceMeshIcon';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import {
-  faAngleLeft,
-  faCaretDown,
-  faExternalLinkAlt,
-  faDigitalTachograph,
-} from '@fortawesome/free-solid-svg-icons';
-import {
-  updatepagetitle,
-  updatebetabadge,
-  toggleDrawer,
-  setAdapter,
-  updateCapabilities,
-} from '../lib/store';
-import {
   CatalogIcon,
   CustomTooltip,
   ListItemIcon,
@@ -45,7 +27,11 @@ import {
   Box,
   NoSsr,
   Zoom,
-} from '@layer5/sistent';
+  LeftArrowIcon,
+  ExternalLinkIcon as IconExternalLink,
+  TachographDigitalIcon,
+  useTheme,
+} from '@sistent/sistent';
 import ExtensionPointSchemaValidator from '../utils/ExtensionPointSchemaValidator';
 import { cursorNotAllowed, disabledStyle } from '../css/disableComponent.styles';
 import { CapabilitiesRegistry } from '../utils/disabledComponents';
@@ -54,7 +40,6 @@ import {
   CONFIGURATION,
   DASHBOARD,
   CATALOG,
-  FILTER,
   LIFECYCLE,
   SERVICE_MESH,
   PERFORMANCE,
@@ -63,14 +48,13 @@ import {
   CONNECTION,
   ENVIRONMENT,
   WORKSPACE,
+  EXTENSIONS,
 } from '../constants/navigator';
 import { iconSmall } from '../css/icons.styles';
 import CAN from '@/utils/can';
 import { keys } from '@/utils/permission_constants';
 import { CustomTextTooltip } from './MesheryMeshInterface/PatternService/CustomTextTooltip';
 import {
-  ChevronIcon,
-  ExpandMoreIcon,
   HideScrollbar,
   LinkContainer,
   ListIconSide,
@@ -95,15 +79,29 @@ import {
   ChevronButtonWrapper,
   FixedSidebarFooter,
   SidebarDrawer,
+  ExpandMore,
 } from './General/style';
 import DashboardIcon from '@/assets/icons/DashboardIcon';
 import { useMediaQuery } from '@mui/material';
 import { getProviderCapabilities, getSystemVersion } from '@/rtk-query/user';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  toggleDrawer,
+  updateBetaBadge,
+  updateCapabilities,
+  updateExtensionType,
+  updateTitle,
+} from '@/store/slices/mesheryUi';
+import { useRouter } from 'next/router';
+import { setAdapter } from '@/store/slices/adapter';
 
 const drawerIconsStyle = { height: '1.21rem', width: '1.21rem', fontSize: '1.45rem', ...iconSmall };
 const externalLinkIconStyle = { width: '1.11rem', fontSize: '1.11rem' };
 
-const getNavigatorComponents = (/** @type {CapabilitiesRegistry} */ capabilityRegistryObj) => [
+const getNavigatorComponents = (
+  /** @type {CapabilitiesRegistry} */ capabilityRegistryObj,
+  theme,
+) => [
   {
     id: DASHBOARD,
     icon: <DashboardIcon style={drawerIconsStyle} />,
@@ -203,19 +201,19 @@ const getNavigatorComponents = (/** @type {CapabilitiesRegistry} */ capabilityRe
           subject: keys.VIEW_CATALOG.subject,
         },
       },
-      {
-        id: FILTER,
-        icon: <FilterIcon style={{ ...drawerIconsStyle }} />,
-        href: '/configuration/filters',
-        title: 'Filters',
-        show: capabilityRegistryObj.isNavigatorComponentEnabled([CONFIGURATION, FILTER]),
-        link: true,
-        isBeta: true,
-        permission: {
-          action: keys.VIEW_FILTERS.action,
-          subject: keys.VIEW_FILTERS.subject,
-        },
-      },
+      // {
+      //   id: FILTER,
+      //   icon: <FilterIcon style={{ ...drawerIconsStyle }} />,
+      //   href: '/configuration/filters',
+      //   title: 'Filters',
+      //   show: capabilityRegistryObj.isNavigatorComponentEnabled([CONFIGURATION, FILTER]),
+      //   link: true,
+      //   isBeta: true,
+      //   permission: {
+      //     action: keys.VIEW_FILTERS.action,
+      //     subject: keys.VIEW_FILTERS.subject,
+      //   },
+      // },
       {
         id: DESIGN,
         icon: <PatternIcon style={{ ...drawerIconsStyle }} />,
@@ -243,9 +241,7 @@ const getNavigatorComponents = (/** @type {CapabilitiesRegistry} */ capabilityRe
     children: [
       {
         id: PROFILES,
-        icon: (
-          <FontAwesomeIcon icon={faDigitalTachograph} style={{ fontSize: 24, color: 'white' }} />
-        ),
+        icon: <TachographDigitalIcon fill={theme.palette.icon.default} />,
         href: '/performance/profiles',
         title: 'Profiles',
         show: capabilityRegistryObj.isNavigatorComponentEnabled([PERFORMANCE, PROFILES]),
@@ -258,11 +254,11 @@ const getNavigatorComponents = (/** @type {CapabilitiesRegistry} */ capabilityRe
     ],
   },
   {
-    id: 'Extensions',
+    id: EXTENSIONS,
     icon: <ExtensionIcon style={drawerIconsStyle} />,
     hovericon: <ExtensionIcon style={drawerIconsStyle} />,
     title: 'Extensions',
-    show: capabilityRegistryObj.isNavigatorComponentEnabled(['Extensions']),
+    show: capabilityRegistryObj.isNavigatorComponentEnabled([EXTENSIONS]),
     width: 12,
     link: true,
     href: '/extensions',
@@ -274,63 +270,30 @@ const getNavigatorComponents = (/** @type {CapabilitiesRegistry} */ capabilityRe
   },
 ];
 
-const ExternalLinkIcon = (
-  <FontAwesomeIcon style={externalLinkIconStyle} icon={faExternalLinkAlt} transform="shrink-7" />
-);
-
-const externlinks = [
-  {
-    id: 'doc',
-    href: 'https://docs.meshery.io',
-    title: 'Documentation',
-    icon: <DocumentIcon style={drawerIconsStyle} />,
-    external_icon: ExternalLinkIcon,
-  },
-  {
-    id: 'community',
-    href: 'https://slack.meshery.io',
-    title: 'Community',
-    icon: (
-      <SlackIcon
-        style={{ ...drawerIconsStyle, height: '1.5rem', width: '1.5rem', marginTop: '' }}
-      />
-    ),
-    external_icon: ExternalLinkIcon,
-  },
-  {
-    id: 'forum',
-    href: 'https://meshery.io/community#community-forums',
-    title: 'Discussion Forum',
-    icon: <ChatIcon style={drawerIconsStyle} />,
-    external_icon: ExternalLinkIcon,
-  },
-  {
-    id: 'issues',
-    href: 'https://github.com/meshery/meshery/issues/new/choose',
-    title: 'Issues',
-    icon: <GithubIcon style={drawerIconsStyle} />,
-    external_icon: ExternalLinkIcon,
-  },
-];
-
-const NavigatorWrapper = (props) => {
+const NavigatorWrapper = () => {
   const isMobile = useMediaQuery('(max-width:599px)');
-
+  const dispatch = useDispatch();
+  const { isDrawerCollapsed } = useSelector((state) => state.ui);
   useEffect(() => {
-    if (isMobile && !props.isDrawerCollapsed) {
-      props.toggleDrawer({ isDrawerCollapsed: true });
+    if (isMobile && !isDrawerCollapsed) {
+      dispatch(toggleDrawer({ isDrawerCollapsed: true }));
     }
   }, [isMobile]);
 
-  return <Navigator_ {...props} />;
+  return <Navigator_ />;
 };
 
-const Navigator_ = (props) => {
-  const { meshAdapters: initialMeshAdapters } = props;
-
+const Navigator_ = () => {
+  const { meshAdapters } = useSelector((state) => state.adapter);
+  const { meshAdaptersts } = useSelector((state) => state.adapter);
+  const dispatch = useDispatch();
+  const { capabilitiesRegistry } = useSelector((state) => state.ui);
+  const { catalogVisibility } = useSelector((state) => state.ui);
+  const theme = useTheme();
+  const router = useRouter();
   const [state, setState] = useState({
     path: '',
-    meshAdapters: initialMeshAdapters,
+    meshAdapters,
     mts: new Date(),
     navigator: ExtensionPointSchemaValidator('navigator')(),
     showHelperButton: false,
@@ -360,7 +323,6 @@ const Navigator_ = (props) => {
   }, []);
 
   useEffect(() => {
-    const { meshAdapters, meshAdaptersts } = props;
     const path = window.location.pathname;
     if (meshAdaptersts > state.mts) {
       updateState({
@@ -371,8 +333,9 @@ const Navigator_ = (props) => {
 
     const fetchNestedPathAndTitle = (path, title, href, children, isBeta) => {
       if (href === path) {
-        props.updatepagetitle({ title });
-        props.updatebetabadge({ isBeta });
+        dispatch(updateTitle({ title }));
+        dispatch(updateBetaBadge({ isBeta }));
+
         return;
       }
       if (children && children.length > 0) {
@@ -386,7 +349,50 @@ const Navigator_ = (props) => {
       fetchNestedPathAndTitle(path, title, href, children, isBeta);
     });
     updateState({ path });
-  }, [props.meshAdapters, props.meshAdaptersts, window.location.pathname]);
+  }, [meshAdapters, meshAdaptersts, window.location.pathname, dispatch]);
+
+  const ExternalLinkIcon = (
+    <IconExternalLink
+      {...externalLinkIconStyle}
+      transform="shrink-7"
+      fill={theme.palette.icon.default}
+    />
+  );
+
+  const externlinks = [
+    {
+      id: 'doc',
+      href: 'https://docs.meshery.io',
+      title: 'Documentation',
+      icon: <DocumentIcon style={drawerIconsStyle} />,
+      external_icon: ExternalLinkIcon,
+    },
+    {
+      id: 'community',
+      href: 'https://slack.meshery.io',
+      title: 'Community',
+      icon: (
+        <SlackIcon
+          style={{ ...drawerIconsStyle, height: '1.5rem', width: '1.5rem', marginTop: '' }}
+        />
+      ),
+      external_icon: ExternalLinkIcon,
+    },
+    {
+      id: 'forum',
+      href: 'https://meshery.io/community#community-forums',
+      title: 'Discussion Forum',
+      icon: <ChatIcon style={drawerIconsStyle} />,
+      external_icon: ExternalLinkIcon,
+    },
+    {
+      id: 'issues',
+      href: 'https://github.com/meshery/meshery/issues/new/choose',
+      title: 'Issues',
+      icon: <GithubIcon style={drawerIconsStyle} />,
+      external_icon: ExternalLinkIcon,
+    },
+  ];
 
   const fetchCapabilities = async () => {
     const { data: result, isSuccess, isError, error } = await getProviderCapabilities();
@@ -399,7 +405,7 @@ const Navigator_ = (props) => {
         capabilitiesRegistryObj,
         navigatorComponents,
       });
-      props.updateCapabilities({ capabilitiesRegistry: result });
+      dispatch(updateCapabilities({ capabilitiesRegistry: result }));
     }
     if (isError) {
       console.error('Error fetching capabilities', error);
@@ -424,23 +430,22 @@ const Navigator_ = (props) => {
   };
 
   const createNavigatorComponents = (capabilityRegistryObj) => {
-    return getNavigatorComponents(capabilityRegistryObj);
+    return getNavigatorComponents(capabilityRegistryObj, theme);
   };
 
   const handleTitleClick = () => {
-    props.router.push('/');
+    router.push('/');
   };
 
   const handleAdapterClick = (id, link) => {
-    props.setAdapter({ selectedAdapter: id });
+    dispatch(setAdapter({ selectedAdapter: id }));
     if (id != -1 && !link) {
-      props.router.push('/management');
+      router.push('/management');
     }
   };
 
   const toggleMiniDrawer = () => {
-    const { toggleDrawer, isDrawerCollapsed } = props;
-    toggleDrawer({ isDrawerCollapsed: !isDrawerCollapsed });
+    dispatch(toggleDrawer({ isDrawerCollapsed: !isDrawerCollapsed }));
   };
 
   const toggleSpacing = () => {
@@ -478,7 +483,7 @@ const Navigator_ = (props) => {
         let show = false;
         cat.children?.forEach((ch) => {
           if (ch.id === 'Designs') {
-            const idx = props.capabilitiesRegistry?.capabilities?.findIndex(
+            const idx = capabilitiesRegistry?.capabilities?.findIndex(
               (cap) => cap.feature === 'persist-meshery-patterns',
             );
             if (idx != -1) {
@@ -495,7 +500,7 @@ const Navigator_ = (props) => {
       if (cat.id === CONFIGURATION) {
         cat.children?.forEach((ch) => {
           if (ch.id === CATALOG) {
-            ch.show = props.catalogVisibility;
+            ch.show = catalogVisibility;
           }
         });
       }
@@ -621,7 +626,6 @@ const Navigator_ = (props) => {
   };
 
   const renderNavigatorExtensions = (children, depth) => {
-    const { isDrawerCollapsed } = props;
     const { path } = state;
     if (children && children.length > 0) {
       return (
@@ -654,7 +658,7 @@ const Navigator_ = (props) => {
   const extensionPointContent = (icon, href, name, drawerCollapsed) => {
     let content = (
       <>
-        <LinkContainer data-cy={name}>
+        <LinkContainer data-testid={name}>
           <CustomTooltip
             title={name}
             placement="right"
@@ -701,7 +705,10 @@ const Navigator_ = (props) => {
             height: '30px',
           }}
         >
-          <Box width="100%" onClick={() => props.updateExtensionType('navigator')}>
+          <Box
+            width="100%"
+            onClick={() => dispatch(updateExtensionType({ extensionType: 'navigator' }))}
+          >
             {content}
           </Box>
         </Link>
@@ -712,7 +719,6 @@ const Navigator_ = (props) => {
   };
 
   const renderChildren = (idname, children, depth) => {
-    const { isDrawerCollapsed } = props;
     const { path } = state;
     updatenavigatorComponentsMenus();
     if (idname != LIFECYCLE && children && children.length > 0) {
@@ -738,13 +744,14 @@ const Navigator_ = (props) => {
                   <div key={idc}>
                     <NavigatorListItemII
                       button
+                      data-testid={idc}
                       key={idc}
                       depth={depth}
                       isDrawerCollapsed={isDrawerCollapsed}
                       isActive={isActive}
                       onClick={() => {
                         if (linkc && hrefc) {
-                          props.router.push(hrefc);
+                          router.push(hrefc);
                         }
                       }}
                       disabled={permissionc ? !CAN(permissionc.action, permissionc.subject) : false}
@@ -785,7 +792,7 @@ const Navigator_ = (props) => {
                     <div key={idc} style={!showc ? cursorNotAllowed : null}>
                       <NavigatorListItemIII
                         component="a"
-                        data-cy={idc}
+                        data-testid={idc}
                         button
                         key={idc}
                         depth={depth}
@@ -795,7 +802,7 @@ const Navigator_ = (props) => {
                         onClick={() => {
                           handleAdapterClick(idc, linkc);
                           if (linkc && hrefc) {
-                            props.router.push(hrefc);
+                            router.push(hrefc);
                           }
                         }}
                         disabled={
@@ -821,6 +828,9 @@ const Navigator_ = (props) => {
   };
 
   const linkContent = (iconc, titlec, hrefc, linkc, drawerCollapsed) => {
+    const updatedIcon = React.cloneElement(iconc, {
+      fill: state.path === hrefc ? theme.palette.icon.brand : theme.palette.common.white,
+    });
     let linkContent = (
       <>
         <LinkContainer>
@@ -831,7 +841,7 @@ const Navigator_ = (props) => {
             disableHoverListener={!drawerCollapsed}
             disableTouchListener={!drawerCollapsed}
           >
-            <MainListIcon>{iconc}</MainListIcon>
+            <MainListIcon>{updatedIcon}</MainListIcon>
           </CustomTooltip>
           <SideBarText drawerCollapsed={drawerCollapsed}>{titlec}</SideBarText>
         </LinkContainer>
@@ -843,7 +853,7 @@ const Navigator_ = (props) => {
     }
     return linkContent;
   };
-
+  const { isDrawerCollapsed } = useSelector((state) => state.ui);
   const Title = (
     <div
       style={
@@ -858,7 +868,7 @@ const Navigator_ = (props) => {
           onClick={handleTitleClick}
           disableLogo={!state.capabilitiesRegistryObj?.isNavigatorComponentEnabled([DASHBOARD])}
         >
-          {props.isDrawerCollapsed ? (
+          {isDrawerCollapsed ? (
             <>
               <MainLogoCollapsed src="/static/img/meshery-logo.png" onClick={handleTitleClick} />
               <MainLogoTextCollapsed
@@ -904,7 +914,7 @@ const Navigator_ = (props) => {
                   isShow={!show}
                   onClick={() => toggleItemCollapse(childId)}
                   onMouseOver={() =>
-                    props.isDrawerCollapsed ? updateState({ hoveredId: childId }) : null
+                    isDrawerCollapsed ? updateState({ hoveredId: childId }) : null
                   }
                   onMouseLeave={() =>
                     !submenu || !state.openItems.includes(childId)
@@ -914,16 +924,16 @@ const Navigator_ = (props) => {
                   disabled={permission ? !CAN(permission.action, permission.subject) : false}
                 >
                   <Link href={link ? href : ''}>
-                    <NavigatorLink data-cy={childId}>
+                    <NavigatorLink data-testid={childId}>
                       <CustomTooltip
                         title={childId}
                         placement="right"
-                        disableFocusListener={!props.isDrawerCollapsed}
+                        disableFocusListener={!isDrawerCollapsed}
                         disableHoverListener={true}
-                        disableTouchListener={!props.isDrawerCollapsed}
+                        disableTouchListener={!isDrawerCollapsed}
                         TransitionComponent={Zoom}
                       >
-                        {props.isDrawerCollapsed &&
+                        {isDrawerCollapsed &&
                         (state.hoveredId === childId ||
                           (state.openItems.includes(childId) && submenu)) ? (
                           <div>
@@ -944,14 +954,14 @@ const Navigator_ = (props) => {
                           <MainListIcon>{icon}</MainListIcon>
                         )}
                       </CustomTooltip>
-                      <SideBarText drawerCollapsed={props.isDrawerCollapsed}>{title}</SideBarText>
+                      <SideBarText drawerCollapsed={isDrawerCollapsed}>{title}</SideBarText>
                     </NavigatorLink>
                   </Link>
-                  <ExpandMoreIcon
-                    icon={faCaretDown}
+                  <ExpandMore
                     onClick={() => toggleItemCollapse(childId)}
-                    isCollapsed={state.openItems.includes(childId)} // Pass collapsed state
-                    isDrawerCollapsed={props.isDrawerCollapsed} // Pass drawer state
+                    isCollapsed={state.openItems.includes(childId)}
+                    isDrawerCollapsed={isDrawerCollapsed}
+                    theme={theme}
                     hasChildren={!!children}
                   />
                 </SideBarListItem>
@@ -979,18 +989,18 @@ const Navigator_ = (props) => {
   const HelpIcons = (
     <>
       <NavigatorHelpIcons
-        isCollapsed={props.isDrawerCollapsed}
+        isCollapsed={isDrawerCollapsed}
         size="large"
-        orientation={props.isDrawerCollapsed ? 'vertical' : 'horizontal'}
+        orientation={isDrawerCollapsed ? 'vertical' : 'horizontal'}
       >
         {externlinks.map(({ id, icon, title, href }, index) => {
           return (
             <HelpListItem
               key={id}
-              style={props.isDrawerCollapsed && !state.showHelperButton ? { display: 'none' } : {}}
+              style={isDrawerCollapsed && !state.showHelperButton ? { display: 'none' } : {}}
             >
               <Grow
-                in={state.showHelperButton || !props.isDrawerCollapsed}
+                in={state.showHelperButton || !isDrawerCollapsed}
                 timeout={{ enter: 600 - index * 200, exit: 100 * index }}
               >
                 <a
@@ -998,15 +1008,12 @@ const Navigator_ = (props) => {
                   target="_blank"
                   rel="noreferrer"
                   style={
-                    props.isDrawerCollapsed
+                    isDrawerCollapsed
                       ? { display: 'flex', alignItems: 'center', justifyContent: 'center' }
                       : {}
                   }
                 >
-                  <CustomTextTooltip
-                    title={title}
-                    placement={props.isDrawerCollapsed ? 'right' : 'top'}
-                  >
+                  <CustomTextTooltip title={title} placement={isDrawerCollapsed ? 'right' : 'top'}>
                     <ListIconSide>{icon}</ListIconSide>
                   </CustomTextTooltip>
                 </a>
@@ -1014,9 +1021,9 @@ const Navigator_ = (props) => {
             </HelpListItem>
           );
         })}
-        <ListItem style={{ display: props.isDrawerCollapsed ? 'inherit' : 'none' }}>
-          <CustomTextTooltip title="Help" placement={props.isDrawerCollapsed ? 'right' : 'top'}>
-            <HelpButton isCollapsed={props.isDrawerCollapsed} onClick={toggleSpacing}>
+        <ListItem style={{ display: isDrawerCollapsed ? 'inherit' : 'none' }}>
+          <CustomTextTooltip title="Help" placement={isDrawerCollapsed ? 'right' : 'top'}>
+            <HelpButton isCollapsed={isDrawerCollapsed} onClick={toggleSpacing}>
               <HelpIcon
                 style={{
                   fontSize: '1.45rem',
@@ -1051,11 +1058,11 @@ const Navigator_ = (props) => {
         fontSize: '0.75rem',
       }}
     >
-      {props.isDrawerCollapsed ? (
+      {isDrawerCollapsed ? (
         <div style={{ textAlign: 'center', width: '100%' }}>{state.versionDetail.build}</div>
       ) : (
         <Grow
-          in={!props.isDrawerCollapsed}
+          in={!isDrawerCollapsed}
           timeout={{ enter: 800, exit: 100 }}
           style={{ textAlign: 'center', width: '100%' }}
         >
@@ -1071,7 +1078,7 @@ const Navigator_ = (props) => {
 
   const Chevron = (
     <ChevronButtonWrapper
-      isCollapsed={props.isDrawerCollapsed}
+      isCollapsed={isDrawerCollapsed}
       style={
         state?.capabilitiesRegistryObj?.isNavigatorComponentEnabled?.([TOGGLER])
           ? {}
@@ -1086,27 +1093,24 @@ const Navigator_ = (props) => {
         }
         onClick={toggleMiniDrawer}
       >
-        <>
-          <ChevronIcon
-            icon={faAngleLeft}
-            fixedWidth
-            size="2x"
-            style={{
-              margin: '0.75rem 0.2rem ',
-              width: '0.8rem',
-              verticalAlign: 'middle',
-              color: props.isDrawerCollapsed ? '#fff' : 'inherit',
-            }}
-            alt="Sidebar collapse toggle icon"
-          />
-        </>
+        <LeftArrowIcon
+          alt="Sidebar collapse toggle"
+          style={{
+            cursor: 'pointer',
+            verticalAlign: 'middle',
+          }}
+          fill={theme.palette.icon.default}
+          stroke={theme.palette.icon.default}
+          width="1.2rem"
+          height="2.8rem"
+        />
       </div>
     </ChevronButtonWrapper>
   );
 
   return (
     <NoSsr>
-      <SidebarDrawer isCollapsed={props.isDrawerCollapsed} variant="permanent">
+      <SidebarDrawer isCollapsed={isDrawerCollapsed} variant="permanent">
         {Title}
         {Menu}
         <FixedSidebarFooter>
@@ -1119,30 +1123,6 @@ const Navigator_ = (props) => {
   );
 };
 
-const mapDispatchToProps = (dispatch) => ({
-  updatepagetitle: bindActionCreators(updatepagetitle, dispatch),
-  updatebetabadge: bindActionCreators(updatebetabadge, dispatch),
-  toggleDrawer: bindActionCreators(toggleDrawer, dispatch),
-  setAdapter: bindActionCreators(setAdapter, dispatch),
-  updateCapabilities: bindActionCreators(updateCapabilities, dispatch),
-});
-
-const mapStateToProps = (state) => ({
-  meshAdapters: state.get('meshAdapters').toJS(),
-  meshAdaptersts: state.get('meshAdaptersts'),
-  path: state.get('page').get('path'),
-  isDrawerCollapsed: state.get('isDrawerCollapsed'),
-  capabilitiesRegistry: state.get('capabilitiesRegistry'),
-  organization: state.get('organization'),
-  keys: state.get('keys'),
-  catalogVisibility: state.get('catalogVisibility'),
-});
-
-export const NavigatorWithRedux = connect(
-  mapStateToProps,
-  mapDispatchToProps,
-)(withRouter(NavigatorWrapper));
-
-export const Navigator = NavigatorWithRedux;
+export const Navigator = NavigatorWrapper;
 
 export default Navigator;

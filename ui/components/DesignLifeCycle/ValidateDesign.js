@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { List, ListItemText, ListItemIcon, Typography, Collapse, useTheme } from '@layer5/sistent';
+import { List, ListItemText, ListItemIcon, Typography, Collapse, useTheme } from '@sistent/sistent';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { ComponentIcon, Loading, getSvgWhiteForComponent, processDesign } from './common';
 import {
@@ -70,8 +70,6 @@ const ValidationResults_ = (props) => {
   const componentsWithErrors = Object.values(validationResults).filter(
     (result) => result.errors?.length && !result?.component?.metatadata?.isAnnotation,
   );
-
-  console.log('componentsWithErrors', componentsWithErrors);
 
   const isCurrentComponent = (err) => err.component.id == currentNodeId;
   const [open, setOpen] = React.useState(componentsWithErrors.map(isCurrentComponent));

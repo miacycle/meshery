@@ -3,7 +3,7 @@ import AlertIcon from '../../assets/icons/AlertIcon';
 import ErrorIcon from '../../assets/icons/ErrorIcon.js';
 import { Colors } from '../../themes/app';
 import ReadIcon from '../../assets/icons/ReadIcon';
-import { InfoIcon } from '@layer5/sistent';
+import { InfoIcon } from '@sistent/sistent';
 
 export const SEVERITY = {
   INFO: 'informational',
@@ -56,5 +56,26 @@ export const SEVERITY_STYLE = {
     icon: InfoIcon,
     color: NOTIFICATIONCOLORS.SUCCESS,
     darkColor: NOTIFICATIONCOLORS.SUCCESS,
+  },
+};
+
+export const eventDetailFormatterKey = ({ action, category }) => `${action}-${category}`;
+
+export const EVENT_TYPE = {
+  DEPLOY_DESIGN: {
+    category: 'pattern',
+    action: 'deploy',
+  },
+  UNDEPLOY_DESIGN: {
+    category: 'pattern',
+    action: 'undeploy',
+  },
+  EVALUATE_DESIGN: {
+    category: 'relationship',
+    action: 'evaluation',
+  },
+  REGISTRANT_SUMMARY: {
+    category: 'entity',
+    action: 'get_summary',
   },
 };

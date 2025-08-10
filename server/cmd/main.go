@@ -12,30 +12,31 @@ import (
 	"github.com/fsnotify/fsnotify"
 
 	"github.com/gofrs/uuid"
-	"github.com/layer5io/meshery/mesheryctl/pkg/constants"
-	"github.com/layer5io/meshery/server/handlers"
-	"github.com/layer5io/meshery/server/helpers"
-	"github.com/layer5io/meshery/server/helpers/utils"
-	"github.com/layer5io/meshery/server/internal/graphql"
-	"github.com/layer5io/meshery/server/internal/store"
-	"github.com/layer5io/meshery/server/machines"
-	mhelpers "github.com/layer5io/meshery/server/machines/helpers"
-	"github.com/layer5io/meshery/server/models"
-	"github.com/layer5io/meshery/server/models/connections"
-	mesherymeshmodel "github.com/layer5io/meshery/server/models/meshmodel"
-	"github.com/layer5io/meshery/server/router"
-	"github.com/layer5io/meshkit/broker/nats"
-	"github.com/layer5io/meshkit/logger"
-	_events "github.com/layer5io/meshkit/models/events"
-	"github.com/layer5io/meshkit/models/meshmodel/core/policies"
-	meshmodel "github.com/layer5io/meshkit/models/meshmodel/registry"
-	"github.com/layer5io/meshkit/utils/broadcast"
-	"github.com/layer5io/meshkit/utils/events"
-	meshsyncmodel "github.com/layer5io/meshsync/pkg/model"
-	"github.com/spf13/viper"
-
-	"github.com/meshery/schemas/models/v1beta1"
+	"github.com/meshery/meshery/mesheryctl/pkg/constants"
+	"github.com/meshery/meshery/server/handlers"
+	"github.com/meshery/meshery/server/helpers"
+	"github.com/meshery/meshery/server/helpers/utils"
+	"github.com/meshery/meshery/server/internal/graphql"
+	"github.com/meshery/meshery/server/internal/store"
+	"github.com/meshery/meshery/server/machines"
+	mhelpers "github.com/meshery/meshery/server/machines/helpers"
+	"github.com/meshery/meshery/server/models"
+	"github.com/meshery/meshery/server/models/connections"
+	mesherymeshmodel "github.com/meshery/meshery/server/models/meshmodel"
+	"github.com/meshery/meshery/server/router"
+	"github.com/meshery/meshkit/broker/nats"
+	"github.com/meshery/meshkit/logger"
+	_events "github.com/meshery/meshkit/models/events"
+	"github.com/meshery/meshkit/models/meshmodel/core/policies"
+	meshmodel "github.com/meshery/meshkit/models/meshmodel/registry"
+	"github.com/meshery/meshkit/utils/broadcast"
+	"github.com/meshery/meshkit/utils/events"
+	meshsyncmodel "github.com/meshery/meshsync/pkg/model"
+	schemasConnection "github.com/meshery/schemas/models/v1beta1/connection"
+	"github.com/meshery/schemas/models/v1beta1/environment"
+	"github.com/meshery/schemas/models/v1beta1/workspace"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -113,12 +114,15 @@ func main() {
 	viper.SetDefault("SKIP_DOWNLOAD_CONTENT", false)
 	viper.SetDefault("SKIP_COMP_GEN", false)
 	viper.SetDefault("PLAYGROUND", false)
+	viper.SetDefault("MESHSYNC_DEFAULT_DEPLOYMENT_MODE", schemasConnection.MeshsyncDeploymentModeDefault)
 	store.Initialize()
 
 	log.Info("Local Provider capabilities are: ", version)
 
 	// Get the channel
 	log.Info("Meshery Server release channel is: ", releasechannel)
+
+	log.Infof("MESHSYNC_DEFAULT_DEPLOYMENT_MODE is %s", viper.GetString("MESHSYNC_DEFAULT_DEPLOYMENT_MODE"))
 
 	home, err := os.UserHomeDir()
 	if viper.GetString("USER_DATA_FOLDER") == "" {
@@ -208,16 +212,24 @@ func main() {
 		models.Organization{},
 		models.Key{},
 		connections.Connection{},
-		v1beta1.Environment{},
-		v1beta1.EnvironmentConnectionMapping{},
-		v1beta1.Workspace{},
-		v1beta1.WorkspacesEnvironmentsMapping{},
-		v1beta1.WorkspacesDesignsMapping{},
+		environment.Environment{},
+		environment.EnvironmentConnectionMapping{},
+		workspace.Workspace{},
+		workspace.WorkspacesEnvironmentsMapping{},
+		workspace.WorkspacesDesignsMapping{},
 		_events.Event{},
 	)
 	if err != nil {
 		log.Error(ErrDatabaseAutoMigration(err))
 		os.Exit(1)
+	}
+
+	meshsyncDefaultDeploymentMode := schemasConnection.MeshsyncDeploymentModeFromString(
+		viper.GetString("MESHSYNC_DEFAULT_DEPLOYMENT_MODE"),
+	)
+
+	if meshsyncDefaultDeploymentMode == schemasConnection.MeshsyncDeploymentModeUndefined {
+		meshsyncDefaultDeploymentMode = schemasConnection.MeshsyncDeploymentModeDefault
 	}
 
 	lProv := &models.DefaultLocalProvider{
@@ -241,6 +253,7 @@ func main() {
 		EventsPersister:                 &models.EventsPersister{DB: dbHandler},
 		GenericPersister:                dbHandler,
 		Log:                             log,
+		MeshsyncDefaultDeploymentMode:   meshsyncDefaultDeploymentMode,
 	}
 
 	// Local remote provider is initalized here.
@@ -305,19 +318,20 @@ func main() {
 			continue
 		}
 		cp := &models.RemoteProvider{
-			RemoteProviderURL:          parsedURL.String(),
-			RefCookieName:              parsedURL.Host + "_ref",
-			SessionName:                parsedURL.Host,
-			TokenStore:                 make(map[string]string),
-			LoginCookieDuration:        1 * time.Hour,
-			SessionPreferencePersister: &models.SessionPreferencePersister{DB: dbHandler},
-			UserCapabilitiesPersister:  &models.UserCapabilitiesPersister{DB: dbHandler},
-			ProviderVersion:            version,
-			SmiResultPersister:         &models.SMIResultsPersister{DB: dbHandler},
-			GenericPersister:           dbHandler,
-			EventsPersister:            &models.EventsPersister{DB: dbHandler},
-			Log:                        log,
-			CookieDuration:             24 * time.Hour,
+			RemoteProviderURL:             parsedURL.String(),
+			RefCookieName:                 parsedURL.Host + "_ref",
+			SessionName:                   parsedURL.Host,
+			TokenStore:                    make(map[string]string),
+			LoginCookieDuration:           1 * time.Hour,
+			SessionPreferencePersister:    &models.SessionPreferencePersister{DB: dbHandler},
+			UserCapabilitiesPersister:     &models.UserCapabilitiesPersister{DB: dbHandler},
+			ProviderVersion:               version,
+			SmiResultPersister:            &models.SMIResultsPersister{DB: dbHandler},
+			GenericPersister:              dbHandler,
+			EventsPersister:               &models.EventsPersister{DB: dbHandler},
+			Log:                           log,
+			CookieDuration:                24 * time.Hour,
+			MeshsyncDefaultDeploymentMode: meshsyncDefaultDeploymentMode,
 		}
 
 		cp.Initialize()

@@ -7,7 +7,7 @@ import (
 
 	"github.com/jarcoal/httpmock"
 
-	"github.com/layer5io/meshery/mesheryctl/pkg/utils"
+	"github.com/meshery/meshery/mesheryctl/pkg/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -75,7 +75,7 @@ func TestDeleteCmd(t *testing.T) {
 			golden := utils.NewGoldenFile(t, tt.ExpectedResponse, testdataDir)
 
 			b := utils.SetupMeshkitLoggerTesting(t, false)
-			FilterCmd.SetOutput(b)
+			FilterCmd.SetOut(b)
 
 			FilterCmd.SetArgs(tt.Args)
 			err := FilterCmd.Execute()

@@ -1,16 +1,16 @@
 import { trueRandom } from '../lib/trueRandom';
 import jsYaml from 'js-yaml';
 import { findWorkloadByName } from './workloadFilter';
-import { EVENT_TYPES } from './Enum';
+import { APP_MODE, EVENT_TYPES } from './Enum';
 import _ from 'lodash';
 import { getWebAdress } from './webApis';
 import { APPLICATION, DESIGN, FILTER } from '../constants/navigator';
-import { Tooltip } from '@layer5/sistent';
+import { Tooltip } from '@sistent/sistent';
 import jsyaml from 'js-yaml';
 import yaml from 'js-yaml';
-import { useLegacySelector } from '../lib/store';
 import { mesheryExtensionRoute } from '../pages/_app';
 import { mesheryEventBus } from './eventBus';
+import { useSelector } from 'react-redux';
 
 /**
  * Check if an object is empty
@@ -397,7 +397,6 @@ export const encodeDesignFile = (designJson) => {
  * @param {object} design - The design file of format design schema v1beta1
  */
 export const processDesign = (design) => {
-  console.log('Design to process', design);
   if (design.schemaVersion != 'designs.meshery.io/v1beta1') {
     console.error('Invalid design schema version', design);
     return {
@@ -435,7 +434,7 @@ export const getComponentFromDesign = (design, componentId) => {
  * @param {object} design - The design resource
  */
 export const getDesignVersion = (design) => {
-  if (design.visibility === 'published') {
+  if (design?.visibility === 'published') {
     return design.catalog_data.published_version;
   } else {
     try {
@@ -445,6 +444,12 @@ export const getDesignVersion = (design) => {
       console.error('Version is not available for this design: ', error);
     }
   }
+};
+export const urlEncodeArrayParam = (key, array) => {
+  if (typeof array === 'string') {
+    return array;
+  }
+  return array.map((item) => `${key}=${item}`).join('&');
 };
 
 export const urlEncodeParams = (params) => {
@@ -468,22 +473,35 @@ export function isExtensionOpen() {
   return window.location.pathname.startsWith(mesheryExtensionRoute);
 }
 
-export const isOperatorEnabled = (capabilitiesRegistry) => {
+export const KANVAS_MODE = {
+  DESIGN: 'design',
+  OPERATOR: 'operator',
+};
+
+export function isDesignOpenInKanvas() {
+  const params = new URLSearchParams(window.location.search);
+  return params.has('design') && params.get('mode') === KANVAS_MODE.DESIGN;
+}
+
+export const isKanvasEnabled = (capabilitiesRegistry) => {
   const navigatorExtension = _.get(capabilitiesRegistry, 'extensions.navigator') || [];
   return navigatorExtension.some((ext) => ext.title === 'Kanvas');
 };
 
-export const useIsOperatorEnabled = () => {
-  const capabilitiesRegistry = useLegacySelector((state) => {
-    return state.get('capabilitiesRegistry');
-  });
+export const isOperatorEnabled = isKanvasEnabled;
+export const isKanvasDesignerEnabled = isKanvasEnabled;
 
-  return isOperatorEnabled(capabilitiesRegistry);
+export const useIsKanvasEnabled = () => {
+  const { capabilitiesRegistry } = useSelector((state) => state.ui);
+
+  return isKanvasEnabled(capabilitiesRegistry);
 };
+
+export const useIsOperatorEnabled = useIsKanvasEnabled;
+export const useIsKanvasDesignerEnabled = useIsKanvasEnabled;
 
 export const openViewScopedToDesignInOperator = (designName, designId, router) => {
   if (isExtensionOpen()) {
-    console.log('extension is open publsing');
     mesheryEventBus.publish({
       type: 'OPEN_VIEW_SCOPED_TO_DESIGN',
       data: {
@@ -495,5 +513,54 @@ export const openViewScopedToDesignInOperator = (designName, designId, router) =
   }
 
   router.push(`/extension/meshmap?mode=operator&type=view&design_id=${designId}`);
-  // window.open(view_link, '_blank');
+};
+
+export const mergeDesignWithCurrent = (designId, designName) => {
+  mesheryEventBus.publish({
+    type: 'MERGE_DESIGN',
+    data: {
+      id: designId,
+      name: designName,
+    },
+  });
+  return;
+};
+
+export const openDesignInKanvas = (designId, designName, router) => {
+  if (isExtensionOpen()) {
+    mesheryEventBus.publish({
+      type: 'OPEN_DESIGN_IN_KANVAS',
+      data: {
+        design_id: designId,
+        design_name: designName,
+      },
+    });
+    return;
+  }
+
+  router.push(`/extension/meshmap?mode=design&type=design&id=${designId}`);
+};
+
+export const openViewInKanvas = (viewId, viewName, router) => {
+  console.log('openViewInKanvas', viewId, viewName, router);
+  if (isExtensionOpen()) {
+    mesheryEventBus.publish({
+      type: 'OPEN_VIEW_IN_KANVAS',
+      data: {
+        view_id: viewId,
+        view_name: viewName,
+      },
+    });
+    return;
+  }
+
+  router.push(`/extension/meshmap?mode=operator&type=view&id=${viewId}`);
+};
+
+export const isInOperatorMode = () => {
+  return window.location.search.includes(`mode=${APP_MODE.OPERATOR}`);
+};
+
+export const isInDesignMode = () => {
+  return window.location.search.includes(`mode=${APP_MODE.DESIGN}`);
 };

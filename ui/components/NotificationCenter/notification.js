@@ -3,16 +3,16 @@ import {
   Avatar,
   Box,
   Collapse,
-  Grid,
-  IconButton,
   Slide,
-  Tooltip,
+  IconButton,
   Typography,
   useTheme,
   Checkbox,
   Popover,
   alpha,
-} from '@layer5/sistent';
+  FormattedTime,
+  CustomTooltip,
+} from '@sistent/sistent';
 import {
   OptionList,
   OptionListItem,
@@ -36,12 +36,12 @@ import LinkedInIcon from '../../assets/icons/LinkedInIcon';
 import TwitterIcon from '../../assets/icons/TwitterIcon';
 import ShareIcon from '../../assets/icons/ShareIcon';
 import DeleteIcon from '../../assets/icons/DeleteIcon';
-import moment from 'moment';
+import ErrorIcon from '@/assets/icons/ErrorIcon';
 import {
   useUpdateStatusMutation,
   useDeleteEventMutation,
 } from '../../rtk-query/notificationCenter';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import {
   selectEventById,
   selectIsEventVisible,
@@ -51,9 +51,10 @@ import { useGetUserByIdQuery } from '../../rtk-query/user';
 import { FacebookShareButton, LinkedinShareButton, TwitterShareButton } from 'react-share';
 import ReadIcon from '../../assets/icons/ReadIcon';
 import UnreadIcon from '../../assets/icons/UnreadIcon';
-import { FormattedMetadata } from './metadata';
-
+import { FormattedLinkMetadata, FormattedMetadata, PropertyLinkFormatters } from './metadata';
 import { truncate } from 'lodash';
+import { MESHERY_DOCS_URL } from '@/constants/endpoints';
+import { useDispatch } from 'react-redux';
 
 export const eventPreventDefault = (e) => {
   e.preventDefault();
@@ -63,7 +64,7 @@ export const eventstopPropagation = (e) => {
   e.stopPropagation();
 };
 
-export const MAX_NOTIFICATION_DESCRIPTION_LENGTH = 65;
+export const MAX_NOTIFICATION_DESCRIPTION_LENGTH = 62;
 
 export const canTruncateDescription = (description) => {
   return description.length > MAX_NOTIFICATION_DESCRIPTION_LENGTH;
@@ -77,7 +78,7 @@ const AvatarStack = ({ avatars, direction }) => {
       }}
     >
       {avatars.map((avatar, index) => (
-        <Tooltip title={avatar.name} placement="top" key={index}>
+        <CustomTooltip title={avatar.name} placement="top" key={index}>
           <Box
             sx={{
               zIndex: avatars.length - index,
@@ -86,21 +87,10 @@ const AvatarStack = ({ avatars, direction }) => {
           >
             <Avatar alt={avatar.name} src={avatar.avatar_url} />
           </Box>
-        </Tooltip>
+        </CustomTooltip>
       ))}
     </StyledAvatarStack>
   );
-};
-
-const formatTimestamp = (utcTimestamp) => {
-  const currentUtcTimestamp = moment.utc().valueOf();
-
-  const timediff = currentUtcTimestamp - moment(utcTimestamp).valueOf();
-
-  if (timediff >= 24 * 60 * 60 * 1000) {
-    return moment(utcTimestamp).local().format('MMM DD, YYYY');
-  }
-  return moment(utcTimestamp).fromNow();
 };
 
 const BasicMenu = ({ event }) => {
@@ -122,6 +112,10 @@ const BasicMenu = ({ event }) => {
     setIsSocialShareOpen((prev) => !prev);
   };
   const theme = useTheme();
+  const links = Object.entries(event.metadata || {})
+    .map(([key, value]) => PropertyLinkFormatters[key]?.(value))
+    .filter(Boolean);
+  const errorCodes = getErrorCodesFromEvent(event);
   return (
     <div className="mui-fixed" onClick={(e) => e.stopPropagation()}>
       <IconButton
@@ -166,7 +160,45 @@ const BasicMenu = ({ event }) => {
               </SocialListItem>
             </Collapse>
           </OptionList>
-
+          {errorCodes?.length > 0 && (
+            <OptionList>
+              <ListButton
+                component="a"
+                href={`${MESHERY_DOCS_URL}/reference/error-codes#${errorCodes[0]}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ErrorIcon {...iconMedium} fill={theme.palette.icon.secondary} />
+                <Typography variant="body1" sx={{ marginLeft: '0.5rem' }}>
+                  Error Docs
+                </Typography>
+              </ListButton>
+            </OptionList>
+          )}
+          <OptionList>
+            {links.map((link, index) => {
+              const IconComponent = link.icon;
+              return (
+                <OptionListItem key={index} sx={{ width: '100%' }}>
+                  <ListButton
+                    component="a"
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {IconComponent && (
+                      <IconComponent {...iconMedium} fill={theme.palette.icon.secondary} />
+                    )}
+                    <Typography variant="body1" sx={{ marginLeft: '0.5rem' }}>
+                      {link.label}
+                    </Typography>
+                  </ListButton>
+                </OptionListItem>
+              );
+            })}
+          </OptionList>
           <DeleteEvent event={event} />
           <ChangeStatus event={event} />
         </MenuPaper>
@@ -220,7 +252,34 @@ export const ChangeStatus = ({ event }) => {
     </OptionList>
   );
 };
+export const getErrorCodesFromEvent = (event) => {
+  if (!event || !event.metadata) return null;
 
+  let errorCodes = new Set();
+  if (event.metadata.error) {
+    if (Array.isArray(event.metadata.error)) {
+      event.metadata.error.forEach((err) => {
+        if (err.Code) errorCodes.add(err.Code);
+      });
+    } else if (event.metadata.error.Code) {
+      errorCodes.add(event.metadata.error.Code);
+    }
+  }
+
+  if (event.metadata.ModelDetails) {
+    Object.values(event.metadata.ModelDetails).forEach((detail) => {
+      if (Array.isArray(detail.Errors)) {
+        detail.Errors.forEach((error) => {
+          if (error.error?.Code) {
+            errorCodes.add(error.error.Code);
+          }
+        });
+      }
+    });
+  }
+
+  return [...errorCodes];
+};
 export const Notification = ({ event_id }) => {
   const event = useSelector((state) => selectEventById(state, event_id));
   const isVisible = useSelector((state) => selectIsEventVisible(state, event.id));
@@ -234,6 +293,8 @@ export const Notification = ({ event_id }) => {
     e.stopPropagation();
     setExpanded(!expanded);
   };
+
+  const uiConfig = useSelector((state) => state.events.ui);
 
   const { data: user } = useGetUserByIdQuery(event.user_id || '');
 
@@ -265,33 +326,47 @@ export const Notification = ({ event_id }) => {
       : []),
   ];
 
+  const title =
+    uiConfig?.history_mode && event.metadata?.history_title
+      ? event.metadata.history_title
+      : event.description;
+
   const Detail = () => (
     <Expanded
       container
       style={{
-        backgroundColor: alpha(eventStyle.color, 0.1),
+        backgroundColor: alpha(eventStyle?.color || SEVERITY_STYLE['informational'].color, 0.1),
         color: theme.palette.text.default,
         borderTop: `1px solid ${notificationColor}`,
       }}
     >
-      <Grid
-        item
-        xs={12}
+      <Box
         sx={{
           padding: '1rem',
+          width: '100%',
         }}
       >
-        <ActorAvatar item sm={1}>
-          <AvatarStack
-            avatars={eventActors}
-            direction={{
-              xs: 'row',
-              md: 'row',
-            }}
-          />
-        </ActorAvatar>
+        <Box
+          sx={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <ActorAvatar item style={{ marginBottom: '0.5rem' }}>
+            <AvatarStack
+              avatars={eventActors}
+              direction={{
+                xs: 'row',
+                md: 'row',
+              }}
+            />
+          </ActorAvatar>
+          <FormattedLinkMetadata event={event} />
+        </Box>
         <FormattedMetadata event={event} />
-      </Grid>
+      </Box>
     </Expanded>
   );
   return (
@@ -317,21 +392,30 @@ export const Notification = ({ event_id }) => {
               onClick={eventstopPropagation}
               checked={Boolean(event.checked)}
               onChange={handleSelectEvent}
-              sx={{ margin: '0rem', padding: '0rem' }}
+              sx={{
+                margin: '0rem',
+                padding: '0rem',
+                paddingLeft: '0.5rem',
+                paddingRight: '0.25rem',
+              }}
             />
 
-            <severityStyles.icon {...iconLarge} fill={severityStyles?.color} />
+            <severityStyles.icon
+              {...iconLarge}
+              fill={severityStyles?.color}
+              style={{ paddingRight: '0.25rem' }}
+            />
           </GridItem>
           <GridItem item xs={8} sm>
             <Message variant="body1">
-              {truncate(event.description, {
+              {truncate(title, {
                 length: MAX_NOTIFICATION_DESCRIPTION_LENGTH,
               })}
             </Message>
           </GridItem>
           <GridItem item xs="auto" style={{ justifyContent: 'end', gap: '0rem' }}>
             <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-              <Typography variant="body1">{formatTimestamp(event.created_at)}</Typography>
+              <FormattedTime date={event.created_at} />
             </Box>
             <BasicMenu event={event} />
           </GridItem>

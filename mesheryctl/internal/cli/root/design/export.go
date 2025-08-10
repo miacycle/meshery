@@ -24,12 +24,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/layer5io/meshery/mesheryctl/internal/cli/root/config"
-	"github.com/layer5io/meshery/mesheryctl/pkg/utils"
-	"github.com/layer5io/meshery/server/models"
-	encoding "github.com/layer5io/meshkit/encoding"
-	meshkitutils "github.com/layer5io/meshkit/utils"
 	"github.com/manifoldco/promptui"
+	"github.com/meshery/meshery/mesheryctl/internal/cli/root/config"
+	"github.com/meshery/meshery/mesheryctl/pkg/utils"
+	"github.com/meshery/meshery/server/models"
+	encoding "github.com/meshery/meshkit/encoding"
+	meshkitutils "github.com/meshery/meshkit/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -54,17 +54,17 @@ The command also supports specifying an output directory where the exported desi
 By default, the exported design will be saved in the current directory. The different types of design
 type allowed are oci, original, and current. The default design type is current.`,
 	Example: `
-	# Export a design with a specific ID
-	mesheryctl design export [pattern-name | ID]
-	
-	# Export a design with a specific ID and type
-	mesheryctl design export [pattern-name | ID] --type [design-type]
-	
-	# Export a design and save it to a specific directory
-	mesheryctl design export [pattern-name | ID] --output ./designs
-	
-	# Export a design with a specific type and save it to a directory
-	mesheryctl design export [pattern-name | ID] --type [design-type] --output ./exports
+// Export a design with a specific ID
+mesheryctl design export [pattern-name | ID]
+
+// Export a design with a specific ID and type
+mesheryctl design export [pattern-name | ID] --type [design-type]
+
+// Export a design and save it to a specific directory
+mesheryctl design export [pattern-name | ID] --output ./designs
+
+// Export a design with a specific type and save it to a directory
+mesheryctl design export [pattern-name | ID] --type [design-type] --output ./exports
 	`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {

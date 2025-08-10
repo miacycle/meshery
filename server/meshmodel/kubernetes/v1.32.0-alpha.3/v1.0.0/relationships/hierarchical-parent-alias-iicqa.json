@@ -21,27 +21,29 @@
     "registrant": {
       "id": "00000000-0000-0000-0000-000000000000",
       "name": "",
-      "credential_id": "00000000-0000-0000-0000-000000000000",
       "type": "",
       "sub_type": "",
       "kind": "",
       "status": "",
-      "user_id": "00000000-0000-0000-0000-000000000000",
       "created_at": "0001-01-01T00:00:00Z",
       "updated_at": "0001-01-01T00:00:00Z",
-      "deleted_at": "0001-01-01T00:00:00Z"
+      "deleted_at": null,
+      "schemaVersion": ""
     },
     "connection_id": "00000000-0000-0000-0000-000000000000",
     "category": {
+      "id": "00000000-0000-0000-0000-000000000000",
       "name": ""
     },
+    "subCategory": "",
+    "metadata": null,
     "model": {
       "version": "v1.32.0-alpha.3"
     },
-    "components": null,
-    "relationships": null,
     "components_count": 0,
-    "relationships_count": 0
+    "relationships_count": 0,
+    "components": null,
+    "relationships": null
   },
   "schemaVersion": "relationships.meshery.io/v1alpha3",
   "selectors": [
@@ -50,39 +52,42 @@
         "from": [
           {
             "id": null,
-            "kind": "Pod",
+            "kind": "Container",
             "match": {},
+            "match_strategy_matrix": null,
             "model": {
               "id": "00000000-0000-0000-0000-000000000000",
               "schemaVersion": "",
               "version": "",
-              "name": "kubernetes",
+              "name": "meshery-core",
               "displayName": "",
               "status": "",
               "registrant": {
                 "id": "00000000-0000-0000-0000-000000000000",
                 "name": "",
-                "credential_id": "00000000-0000-0000-0000-000000000000",
                 "type": "",
                 "sub_type": "",
                 "kind": "github",
                 "status": "",
-                "user_id": "00000000-0000-0000-0000-000000000000",
                 "created_at": "0001-01-01T00:00:00Z",
                 "updated_at": "0001-01-01T00:00:00Z",
-                "deleted_at": "0001-01-01T00:00:00Z"
+                "deleted_at": null,
+                "schemaVersion": ""
               },
               "connection_id": "00000000-0000-0000-0000-000000000000",
               "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
                 "name": ""
               },
+              "subCategory": "",
+              "metadata": null,
               "model": {
                 "version": ""
               },
-              "components": null,
-              "relationships": null,
               "components_count": 0,
-              "relationships_count": 0
+              "relationships_count": 0,
+              "components": null,
+              "relationships": null
             },
             "patch": {
               "patchStrategy": "replace",
@@ -90,7 +95,10 @@
                 [
                   "configuration",
                   "spec",
-                  "template"
+                  "template",
+                  "spec",
+                  "containers",
+                  "_"
                 ]
               ]
             }
@@ -101,6 +109,7 @@
             "id": null,
             "kind": "Deployment",
             "match": {},
+            "match_strategy_matrix": null,
             "model": {
               "id": "00000000-0000-0000-0000-000000000000",
               "schemaVersion": "",
@@ -111,27 +120,29 @@
               "registrant": {
                 "id": "00000000-0000-0000-0000-000000000000",
                 "name": "",
-                "credential_id": "00000000-0000-0000-0000-000000000000",
                 "type": "",
                 "sub_type": "",
                 "kind": "github",
                 "status": "",
-                "user_id": "00000000-0000-0000-0000-000000000000",
                 "created_at": "0001-01-01T00:00:00Z",
                 "updated_at": "0001-01-01T00:00:00Z",
-                "deleted_at": "0001-01-01T00:00:00Z"
+                "deleted_at": null,
+                "schemaVersion": ""
               },
               "connection_id": "00000000-0000-0000-0000-000000000000",
               "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
                 "name": ""
               },
+              "subCategory": "",
+              "metadata": null,
               "model": {
                 "version": ""
               },
-              "components": null,
-              "relationships": null,
               "components_count": 0,
-              "relationships_count": 0
+              "relationships_count": 0,
+              "components": null,
+              "relationships": null
             },
             "patch": {
               "patchStrategy": "replace",
@@ -139,7 +150,10 @@
                 [
                   "configuration",
                   "spec",
-                  "template"
+                  "template",
+                  "spec",
+                  "containers",
+                  "_"
                 ]
               ]
             }

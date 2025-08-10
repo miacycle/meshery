@@ -26,10 +26,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/layer5io/meshery/mesheryctl/internal/cli/root/config"
-	"github.com/layer5io/meshery/mesheryctl/pkg/utils"
-	"github.com/layer5io/meshery/server/models"
-	"github.com/layer5io/meshery/server/models/pattern/core"
+	"github.com/meshery/meshery/mesheryctl/internal/cli/root/config"
+	"github.com/meshery/meshery/mesheryctl/pkg/utils"
+	"github.com/meshery/meshery/server/models"
+	"github.com/meshery/meshery/server/models/pattern/core"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -118,8 +118,7 @@ mesheryctl design apply [design-name]
 			if !validURL {
 				content, err := os.ReadFile(file)
 				if err != nil {
-					utils.Log.Error(utils.ErrFileRead(errors.Errorf("file path %s is invalid. Enter a valid path ", file)))
-					return nil
+					return utils.ErrFileRead(errors.Errorf("file path %s is invalid. Enter a valid path", file))
 				}
 
 				// if --skip-save is not passed we save the pattern first

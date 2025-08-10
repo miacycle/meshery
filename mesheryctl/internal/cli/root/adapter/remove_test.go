@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/jarcoal/httpmock"
-	"github.com/layer5io/meshery/mesheryctl/pkg/utils"
+	"github.com/meshery/meshery/mesheryctl/pkg/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -95,7 +95,7 @@ func TestRemoveMesh(t *testing.T) {
 			buff := utils.SetupMeshkitLoggerTesting(t, false)
 			cmd := AdapterCmd
 			cmd.SetArgs(tc.Args)
-			cmd.SetOutput(buff)
+			cmd.SetOut(buff)
 			err := cmd.Execute()
 			if err != nil {
 				// if we're supposed to get an error

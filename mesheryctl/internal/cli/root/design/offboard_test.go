@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/jarcoal/httpmock"
-	"github.com/layer5io/meshery/mesheryctl/pkg/utils"
+	"github.com/meshery/meshery/mesheryctl/pkg/utils"
 )
 
 func TestOffboardCmd(t *testing.T) {
@@ -79,7 +79,7 @@ func TestOffboardCmd(t *testing.T) {
 			golden := utils.NewGoldenFile(t, tt.ExpectedResponse, testdataDir)
 
 			b := utils.SetupMeshkitLoggerTesting(t, false)
-			DesignCmd.SetOutput(b)
+			DesignCmd.SetOut(b)
 			DesignCmd.SetArgs(tt.Args)
 			err := DesignCmd.Execute()
 			if err != nil {

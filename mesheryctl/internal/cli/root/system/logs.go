@@ -26,10 +26,10 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/layer5io/meshery/mesheryctl/internal/cli/root/config"
-	"github.com/layer5io/meshery/mesheryctl/pkg/utils"
+	"github.com/meshery/meshery/mesheryctl/internal/cli/root/config"
+	"github.com/meshery/meshery/mesheryctl/pkg/utils"
 
-	meshkitkube "github.com/layer5io/meshkit/utils/kubernetes"
+	meshkitkube "github.com/meshery/meshkit/utils/kubernetes"
 	log "github.com/sirupsen/logrus"
 	apiCorev1 "k8s.io/api/core/v1"
 
@@ -177,6 +177,14 @@ mesheryctl system logs meshery-istio
 
 			if err != nil {
 				return err
+			}
+
+			// Get and display current context
+			currentContext, err := utils.GetCurrentK8sContext(client)
+			if err != nil {
+				log.Warn("Unable to determine current Kubernetes context: ", err)
+			} else {
+				log.Info("Using Kubernetes context: ", currentContext)
 			}
 
 			// List the pods in the MesheryNamespace

@@ -1,4 +1,4 @@
-import { BasicMarkdown, CircularProgress, styled, lighten, Box } from '@layer5/sistent';
+import { BasicMarkdown, CircularProgress, styled, lighten, Box } from '@sistent/sistent';
 import { SnackbarContent } from 'notistack';
 import { forwardRef } from 'react';
 import { CheckCircle, Error, Info, Warning } from '@mui/icons-material';
@@ -40,6 +40,7 @@ export const StyledAppContent = styled('div')(({ theme, canShowNav }) => ({
   flexDirection: 'column',
   position: 'relative',
   overflowX: 'hidden',
+  overflowY: 'hidden',
   [theme.breakpoints.down('sm')]: {
     marginLeft: canShowNav ? '4.25rem' : '0',
   },
@@ -102,6 +103,13 @@ const StyledSnackbarContent = styled(SnackbarContent)(({ theme, variant }) => {
   };
 });
 
+const StyledCircularProgress = styled(CircularProgress)(({ theme }) => ({
+  color: theme.palette.text.info,
+  marginRight: '0.75rem',
+  height: '1.5rem !important',
+  width: '1.5rem !important',
+}));
+
 export const ThemeResponsiveSnackbar = forwardRef((props, forwardedRef) => {
   const { variant, message, action, key, theme } = props;
 
@@ -118,7 +126,7 @@ export const ThemeResponsiveSnackbar = forwardRef((props, forwardedRef) => {
       case 'info':
         return <Info {...iconProps} />;
       case 'loading':
-        return <CircularProgress size={24} style={{ marginRight: '0.75rem' }} />;
+        return <StyledCircularProgress />;
       default:
         return null;
     }
@@ -127,6 +135,7 @@ export const ThemeResponsiveSnackbar = forwardRef((props, forwardedRef) => {
   return (
     <StyledSnackbarContent ref={forwardedRef} variant={variant} theme={theme}>
       <div
+        data-testid={`SnackbarContent-${variant}`}
         style={{
           display: 'flex',
           alignItems: 'center',

@@ -10,7 +10,7 @@ import {
   useTheme,
   styled,
   NoSsr,
-} from '@layer5/sistent';
+} from '@sistent/sistent';
 import CancelIcon from '@mui/icons-material/Cancel';
 
 const StyledNoOptionsMessage = styled(Typography)(({ theme }) => ({
@@ -182,10 +182,10 @@ const ReactSelectWrapper = ({
 ReactSelectWrapper.propTypes = {
   label: PropTypes.string.isRequired,
   onChange: PropTypes.func.isRequired,
-  onInputChange: PropTypes.func.isRequired,
-  value: PropTypes.object.isRequired,
+  onInputChange: PropTypes.func,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.array]),
   options: PropTypes.array.isRequired,
-  error: PropTypes.bool.isRequired,
+  error: PropTypes.bool,
   isMulti: PropTypes.bool,
   noOptionsMessage: PropTypes.string,
 };

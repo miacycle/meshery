@@ -1,19 +1,28 @@
 import React from 'react';
-import { Box, Checkbox, CircularProgress, Stack, Typography } from '@layer5/sistent';
+import { Box, Checkbox, CircularProgress, Stack, styled, Typography } from '@sistent/sistent';
 import PatternIcon from '@/assets/icons/Pattern';
 import { processDesign } from '@/utils/utils';
-import { CustomTooltip } from '@layer5/sistent';
-import { InfoCircleIcon, useTheme } from '@layer5/sistent';
-import { IconButton } from '@layer5/sistent';
+import { CustomTooltip } from '@sistent/sistent';
+import { InfoCircleIcon, useTheme } from '@sistent/sistent';
+import { IconButton } from '@sistent/sistent';
 
 export const DEPLOYMENT_TYPE = {
   DEPLOY: 'deploy',
   UNDEPLOY: 'undeploy',
 };
 
-export const ComponentIcon = ({ iconSrc }) => {
+const ModelName = styled(Typography)(() => ({
+  fontSize: '10px',
+  fontWeight: 'bold',
+  textTransform: 'uppercase',
+}));
+export const ComponentIcon = ({ iconSrc, label }) => {
+  const [imgError, setImgError] = React.useState(false);
   if (!iconSrc) {
     return <PatternIcon fill="#fff" height="1.5rem" width="1.5rem" />;
+  }
+  if (imgError) {
+    return <ModelName title={label}>{label}</ModelName>;
   }
 
   return (
@@ -25,6 +34,7 @@ export const ComponentIcon = ({ iconSrc }) => {
           width: '100%',
           objectFit: 'contain',
         }}
+        onError={() => setImgError(true)}
       />
     </div>
   );

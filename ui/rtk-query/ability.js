@@ -1,11 +1,17 @@
-import { useLegacySelector } from 'lib/store';
 import { ability } from '../utils/can';
 import { useGetUserKeysQuery } from './userKeys';
 import _ from 'lodash';
 import CustomErrorMessage from '@/components/ErrorPage';
-// import LoadingScreen from '@/components/LoadingComponents/LoadingComponentServer';
 import DefaultError from '@/components/General/error-404';
 import { DynamicFullScrrenLoader } from '@/components/LoadingComponents/DynamicFullscreenLoader';
+import {
+  useGetSelectedOrganization,
+  // useGetUserPrefQuery,
+  useUpdateSelectedOrganizationMutation,
+  // useUpdateUserPrefMutation,
+} from './user';
+
+import { useEffect, useRef } from 'react';
 
 export const useGetUserAbilities = (org, skip) => {
   const { data, ...res } = useGetUserKeysQuery(
@@ -29,7 +35,7 @@ export const useGetUserAbilities = (org, skip) => {
   };
 };
 
-export const useGetCurrentAbilities = (org, setKeys) => {
+export const useGetCurrentAbilities = (org) => {
   const shouldSkip = !org || !org.id;
   const res = useGetUserAbilities(org, shouldSkip);
 
@@ -37,26 +43,66 @@ export const useGetCurrentAbilities = (org, setKeys) => {
     ability.update(res.abilities);
   }
 
-  if (res?.keys) {
-    setKeys({ keys: res.keys });
-  }
-
   return res;
 };
 
-export const LoadSessionGuard = ({ children }) => {
-  // this assumes that the organization is already loaded at the app mount time
-  // otherwise, this will not work
-  const org = useLegacySelector((state) => state.get('organization'));
-  const { isLoading, error } = useGetCurrentAbilities(org, () => {});
+const SelectedOrganizationProvider = ({ children }) => {
+  const {
+    selectedOrganization,
+    didFallback,
+    isLoading: isFetchingSelectedOrg,
+    error: errorFetchingSelectedOrg,
+  } = useGetSelectedOrganization();
 
-  if (error) {
+  const selectedOrganizationId = selectedOrganization?.id;
+
+  const [updatePrefs] = useUpdateSelectedOrganizationMutation();
+
+  const { isLoading: isLoadingAbilities, error: errorLoadingAbilities } = useGetCurrentAbilities({
+    id: selectedOrganizationId,
+  });
+
+  const prefUpdatedToFallback = useRef(false);
+
+  useEffect(() => {
+    console.log('[loadSession] selectedOrganization', selectedOrganization);
+
+    if (prefUpdatedToFallback.current) {
+      return;
+    }
+    if (
+      didFallback &&
+      selectedOrganizationId &&
+      !errorFetchingSelectedOrg &&
+      !isFetchingSelectedOrg
+    ) {
+      console.log('[loadSession] setting default org');
+      const res = updatePrefs(selectedOrganizationId);
+      prefUpdatedToFallback.current = true;
+      console.log('updatePrefs', res);
+    }
+  }, [didFallback, selectedOrganizationId, errorFetchingSelectedOrg, isFetchingSelectedOrg]);
+
+  if (errorFetchingSelectedOrg || (!isFetchingSelectedOrg && !selectedOrganization)) {
+    return (
+      <>
+        <DefaultError />
+        <CustomErrorMessage
+          message={'Error occurred while fetching your current organization'}
+          showImage={false}
+        />
+      </>
+    );
+  }
+
+  if (errorLoadingAbilities) {
     return (
       <>
         <DefaultError />
         <CustomErrorMessage
           message={
-            error.message || 'An error occurred while fetching your organization permissions'
+            errorLoadingAbilities.message ||
+            'An error occurred while fetching your organization permissions'
           }
           showImage={false}
         />
@@ -64,7 +110,10 @@ export const LoadSessionGuard = ({ children }) => {
     );
   }
 
-  return (
-    <DynamicFullScrrenLoader isLoading={isLoading || !org?.id}>{children}</DynamicFullScrrenLoader>
-  );
+  const isLoading = isFetchingSelectedOrg || isLoadingAbilities;
+  return <DynamicFullScrrenLoader isLoading={isLoading}>{children}</DynamicFullScrrenLoader>;
+};
+
+export const LoadSessionGuard = ({ children }) => {
+  return <SelectedOrganizationProvider>{children}</SelectedOrganizationProvider>;
 };

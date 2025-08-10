@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/jarcoal/httpmock"
-	"github.com/layer5io/meshery/mesheryctl/pkg/utils"
+	"github.com/meshery/meshery/mesheryctl/pkg/utils"
 	"github.com/spf13/pflag"
 )
 
@@ -127,7 +127,7 @@ func TestOnboardCmd(t *testing.T) {
 			b := utils.SetupMeshkitLoggerTesting(t, false)
 
 			DesignCmd.SetArgs(tt.Args)
-			DesignCmd.SetOutput(b)
+			DesignCmd.SetOut(b)
 			err := DesignCmd.Execute()
 			if err != nil {
 				// if we're supposed to get an error

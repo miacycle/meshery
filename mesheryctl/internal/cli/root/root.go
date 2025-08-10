@@ -19,18 +19,18 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/layer5io/meshery/mesheryctl/internal/cli/root/adapter"
-	"github.com/layer5io/meshery/mesheryctl/internal/cli/root/components"
-	"github.com/layer5io/meshery/mesheryctl/internal/cli/root/config"
-	"github.com/layer5io/meshery/mesheryctl/internal/cli/root/design"
-	"github.com/layer5io/meshery/mesheryctl/internal/cli/root/environments"
-	"github.com/layer5io/meshery/mesheryctl/internal/cli/root/experimental"
-	"github.com/layer5io/meshery/mesheryctl/internal/cli/root/filter"
-	"github.com/layer5io/meshery/mesheryctl/internal/cli/root/model"
-	"github.com/layer5io/meshery/mesheryctl/internal/cli/root/perf"
-	"github.com/layer5io/meshery/mesheryctl/internal/cli/root/registry"
-	"github.com/layer5io/meshery/mesheryctl/internal/cli/root/system"
-	"github.com/layer5io/meshery/mesheryctl/pkg/utils"
+	"github.com/meshery/meshery/mesheryctl/internal/cli/root/adapter"
+	"github.com/meshery/meshery/mesheryctl/internal/cli/root/components"
+	"github.com/meshery/meshery/mesheryctl/internal/cli/root/config"
+	"github.com/meshery/meshery/mesheryctl/internal/cli/root/design"
+	"github.com/meshery/meshery/mesheryctl/internal/cli/root/environments"
+	"github.com/meshery/meshery/mesheryctl/internal/cli/root/experimental"
+	"github.com/meshery/meshery/mesheryctl/internal/cli/root/filter"
+	"github.com/meshery/meshery/mesheryctl/internal/cli/root/model"
+	"github.com/meshery/meshery/mesheryctl/internal/cli/root/perf"
+	"github.com/meshery/meshery/mesheryctl/internal/cli/root/registry"
+	"github.com/meshery/meshery/mesheryctl/internal/cli/root/system"
+	"github.com/meshery/meshery/mesheryctl/pkg/utils"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
@@ -115,7 +115,7 @@ func init() {
 		experimental.ExpCmd,
 		filter.FilterCmd,
 		registry.RegistryCmd,
-		components.ComponentsCmd,
+		components.ComponentCmd,
 		model.ModelCmd,
 		environments.EnvironmentCmd,
 	}

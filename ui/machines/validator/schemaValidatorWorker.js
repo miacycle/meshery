@@ -1,6 +1,4 @@
-import { workerfyActor } from '@layer5/sistent';
+import { workerfyActor } from '@sistent/sistent';
 import { schemaValidatorMachine } from './schemaValidator';
-
-console.log('Workerfying schemaValidatorMachine');
 
 workerfyActor(schemaValidatorMachine);

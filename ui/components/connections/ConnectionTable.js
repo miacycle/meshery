@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { useRouter } from 'next/router';
 import {
   CustomTooltip,
   CustomColumnVisibilityControl,
@@ -11,14 +12,14 @@ import {
   IconButton,
   Typography,
   Table,
-  Grid,
+  Grid2,
   Button,
   FormControl,
   useTheme,
   TableCell,
   TableRow,
   Popover,
-} from '@layer5/sistent';
+} from '@sistent/sistent';
 import {
   ContentContainer,
   CreateButton,
@@ -27,11 +28,11 @@ import {
   ConnectionStyledSelect,
 } from './styles';
 import { FormatId } from '../DataFormatter';
+import LoadingScreen from '../LoadingComponents/LoadingComponent';
 import { ToolWrapper } from '@/assets/styles/general/tool.styles';
 import MesherySettingsEnvButtons from '../MesherySettingsEnvButtons';
 import { getVisibilityColums } from '../../utils/utils';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import { updateProgress, useLegacySelector } from '../../lib/store';
 import { useNotification } from '../../utils/hooks/useNotification';
 import { EVENT_TYPES } from '../../lib/event-types';
 import { iconMedium } from '../../css/icons.styles';
@@ -59,10 +60,12 @@ import { keys } from '@/utils/permission_constants';
 import { useGetConnectionsQuery, useUpdateConnectionMutation } from '@/rtk-query/connection';
 import { CustomTextTooltip } from '../MesheryMeshInterface/PatternService/CustomTextTooltip';
 import InfoOutlinedIcon from '@/assets/icons/InfoOutlined';
-import { DeleteIcon } from '@layer5/sistent';
+import { DeleteIcon } from '@sistent/sistent';
 
 import { formatDate } from '../DataFormatter';
 import { getFallbackImageBasedOnKind } from '@/utils/fallback';
+import { useSelector } from 'react-redux';
+import { updateProgress } from '@/store/slices/mesheryUi';
 
 const ACTION_TYPES = {
   FETCH_CONNECTIONS: {
@@ -91,13 +94,16 @@ const ACTION_TYPES = {
   },
 };
 
-const ConnectionTable = ({ meshsyncControllerState, connectionMetadataState, selectedFilter }) => {
-  const organization = useLegacySelector((state) => state.get('organization'));
+const ConnectionTable = ({ selectedFilter, selectedConnectionId, updateUrlWithConnectionId }) => {
+  const router = useRouter();
+  const { organization } = useSelector((state) => state.ui);
+  const { connectionMetadataState } = useSelector((state) => state.ui);
+  const { controllerState: meshsyncControllerState } = useSelector((state) => state.ui);
   const ping = useKubernetesHook();
   const { width } = useWindowDimensions();
   const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState();
-  const [sortOrder, setSortOrder] = useState('');
+  const [pageSize, setPageSize] = useState(10);
+  const [sortOrder, setSortOrder] = useState('created_at desc');
   const [rowData, setRowData] = useState(null);
   const [rowsExpanded, setRowsExpanded] = useState([]);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -116,6 +122,11 @@ const ConnectionTable = ({ meshsyncControllerState, connectionMetadataState, sel
   const open = Boolean(anchorEl);
   const modalRef = useRef(null);
 
+  useEffect(() => {
+    if (router.query.searchText) {
+      setSearch(router.query.searchText);
+    }
+  }, [router.query.searchText]);
   const filters = {
     status: {
       name: 'Status',
@@ -154,6 +165,8 @@ const ConnectionTable = ({ meshsyncControllerState, connectionMetadataState, sel
     isError: isConnectionError,
     error: connectionError,
     refetch: getConnections,
+    isLoading: isConnectionLoading,
+    isFetching: isConnectionFetching,
   } = useGetConnectionsQuery({
     page: page,
     pagesize: pageSize,
@@ -177,46 +190,44 @@ const ConnectionTable = ({ meshsyncControllerState, connectionMetadataState, sel
       skip: !organization?.id,
     },
   );
+
   let environments = environmentsResponse?.environments || [];
 
   useEffect(() => {
     updateCols(columns);
     if (isEnvironmentsError) {
       notify({
-        message: `${ACTION_TYPES.FETCH_ENVIRONMENT.error_msg}: ${environmentsError}`,
+        message: `${ACTION_TYPES.FETCH_ENVIRONMENT.error_msg}: ${environmentsError.error}`,
         event_type: EVENT_TYPES.ERROR,
-        details: environmentsError.toString(),
       });
     }
 
     if (isConnectionError) {
       notify({
-        message: `${ACTION_TYPES.FETCH_CONNECTIONS.error_msg}: ${connectionError}`,
+        message: `${ACTION_TYPES.FETCH_CONNECTIONS.error_msg}: ${connectionError.error}`,
         event_type: EVENT_TYPES.ERROR,
-        details: connectionError.toString(),
       });
     }
   }, [environmentsError, connectionError, isEnvironmentsSuccess]);
 
-  const modifiedConnections = connectionData?.connections.map((connection) => {
-    return {
-      ...connection,
-      nextStatus:
-        connection.nextStatus === undefined &&
-        connectionMetadataState[connection.kind]?.transitions,
-      kindLogo: connection.kindLogo === undefined && connectionMetadataState[connection.kind]?.icon,
-    };
+  const enhancedConnections = useMemo(() => {
+    if (!connectionData?.connections) return [];
+
+    return connectionData.connections
+      .filter((conn) => conn.name && conn.kind && conn.status)
+      .map((connection) => ({
+        ...connection,
+        nextStatus: connection.nextStatus || connectionMetadataState[connection.kind]?.transitions,
+        kindLogo: connection.kindLogo || connectionMetadataState[connection.kind]?.icon,
+      }));
+  }, [connectionData, isConnectionLoading, isConnectionFetching, connectionMetadataState]);
+
+  const filteredConnections = enhancedConnections?.filter(({ status, kind }) => {
+    const statusMatch = selectedFilters.status === 'All' || status === selectedFilters.status;
+    const kindMatch = selectedFilters.kind === 'All' || kind === selectedFilters.kind;
+    return statusMatch && kindMatch;
   });
 
-  const connections = modifiedConnections?.filter((connection) => {
-    if (selectedFilters.status === 'All' && selectedFilters.kind === 'All') {
-      return true;
-    }
-    return (
-      (statusFilter === null || connection.status === statusFilter) &&
-      (kindFilter === null || connection.kind === kindFilter)
-    );
-  });
   const url = `https://docs.meshery.io/concepts/logical/connections#states-and-the-lifecycle-of-connections`;
   const envUrl = `https://docs.meshery.io/concepts/logical/environments`;
 
@@ -229,9 +240,8 @@ const ConnectionTable = ({ meshsyncControllerState, connectionMetadataState, sel
     ['created_at', 'na'],
     ['status', 'xs'],
     ['Actions', 'xs'],
-    ['ConnectionID', 'xs'],
+    ['ConnectionID', 'na'],
   ];
-
   const addConnectionToEnvironment = async (
     environmentId,
     environmentName,
@@ -331,20 +341,11 @@ const ConnectionTable = ({ meshsyncControllerState, connectionMetadataState, sel
         variant: PROMPT_VARIANTS.DANGER,
       });
       if (response === 'DELETE') {
-        // let bulkConnections = {}
-        // selected.data.map(({ index }) => {
-        //   bulkConnections = {
-        //     ...bulkConnections,
-        //     [connections[index].id]: CONNECTION_STATES.DELETED
-        //   };
-        // })
-        // const requestBody = JSON.stringify(bulkConnections);
-        // updateConnectionStatus(requestBody);
         selected.data.map(({ index }) => {
           const requestBody = JSON.stringify({
-            [connections[index].id]: CONNECTION_STATES.DELETED,
+            [filteredConnections[index].id]: CONNECTION_STATES.DELETED,
           });
-          UpdateConnectionStatus(connections[index].kind, requestBody);
+          UpdateConnectionStatus(filteredConnections[index].kind, requestBody);
         });
       }
     }
@@ -367,7 +368,7 @@ const ConnectionTable = ({ meshsyncControllerState, connectionMetadataState, sel
   const handleFlushMeshSync = () => {
     return async () => {
       handleActionMenuClose();
-      const connection = connections[rowData.rowIndex];
+      const connection = filteredConnections[rowData.rowIndex];
 
       let response = await modalRef.current.show({
         title: `Flush MeshSync data for ${connection.metadata?.name} ?`,
@@ -460,11 +461,59 @@ const ConnectionTable = ({ meshsyncControllerState, connectionMetadataState, sel
       });
   };
 
-  const handleStatusChange = async (e, connectionId, connectionKind) => {
+  const kubernetesConnectionTransitions = {
+    connected: {
+      disconnected:
+        'Are you sure you want to transition from CONNECTED to DISCONNECTED? This will perform planned maintenance by removing the operator but keeping the cluster registered.',
+      ignored:
+        'Are you sure you want to transition from CONNECTED to IGNORED? This will mark the connection as ignored due to unplanned maintenance, without deleting the registration.',
+      deleted:
+        'Are you sure you want to transition from CONNECTED to DELETED? This will undeploy the operator and unregister the cluster completely.',
+      'not found':
+        'Are you sure you want to transition from CONNECTED to NOT FOUND? Meshery could not connect to the cluster or it is currently unavailable. You can either delete the connection or try re-registering.',
+    },
+    disconnected: {
+      connected:
+        'Are you sure you want to transition from DISCONNECTED to CONNECTED? This will reconnect the cluster and redeploy the operator after maintenance.',
+      deleted:
+        'Are you sure you want to transition from DISCONNECTED to DELETED? This will remove the cluster completely by undeploying the operator and unregistering.',
+    },
+    ignored: {
+      deleted:
+        'Are you sure you want to transition from IGNORED to DELETED? This will completely remove the ignored cluster by undeploying the operator and unregistering.',
+      registered:
+        'Are you sure you want to transition from IGNORED to REGISTER? This will reinitiate the registration process for the ignored connection and attempt to connect it again.',
+    },
+    'not found': {
+      discovered:
+        'Are you sure you want to transition from NOT FOUND to DISCOVERED? You are trying to re-register the cluster. Meshery will attempt to reconnect to the cluster.',
+      deleted:
+        'Are you sure you want to transition from NOT FOUND to DELETED? This will remove the unreachable connection completely by unregistering it.',
+    },
+  };
+
+  const getStatusTransition = (connectionKind, connectionState, transitionState) => {
+    // This is for one connection kind that is kubernetes, and adding other connection kinds
+    // here will make it more complex.
+    // This issue can be resolved if we add the transition messages in the connection schemas
+    // and use the same schema to get the transition messages.
+    // Github issue: https://github.com/meshery/schemas/issues/303
+
+    switch (connectionKind) {
+      case 'kubernetes':
+        return kubernetesConnectionTransitions[connectionState][transitionState];
+      default:
+        return `Are you sure you want to transition from ${connectionState} to ${transitionState}?`;
+    }
+  };
+
+  const handleStatusChange = async (e, connectionId, connectionKind, connectionStatus) => {
     e.stopPropagation();
+    const status = e.target.value;
+    let subtitle = getStatusTransition(connectionKind, connectionStatus, status.toLowerCase());
     let response = await modalRef.current.show({
-      title: `Connection Status Transition`,
-      subtitle: `Are you sure that you want to transition the connection status to ${e.target.value.toUpperCase()}?`,
+      title: `Transition connection to ${status.toUpperCase()}?`,
+      subtitle,
       primaryOption: 'Confirm',
       showInfoIcon: `Learn more about the [lifecycle of connections and the behavior of state transitions](https://docs.meshery.io/concepts/logical/connections) in Meshery Docs.`,
       variant: PROMPT_VARIANTS.WARNING,
@@ -483,6 +532,35 @@ const ConnectionTable = ({ meshsyncControllerState, connectionMetadataState, sel
     setRowData(tableMeta);
   };
   const theme = useTheme();
+
+  // Consolidate multiple useRef hooks into a single object
+  const expansionFlags = useRef({
+    isHandlingExpansion: false,
+    isInitialLoad: true,
+    isUrlExpansion: false,
+    lastProcessedId: null,
+  });
+
+  // Update rowsExpanded when a specific connection ID is selected
+  useEffect(() => {
+    if (!selectedConnectionId || expansionFlags.current.isHandlingExpansion) return;
+    if (expansionFlags.current.lastProcessedId === selectedConnectionId) return;
+
+    if (filteredConnections && filteredConnections.length > 0) {
+      expansionFlags.current.isUrlExpansion = true;
+      expansionFlags.current.lastProcessedId = selectedConnectionId;
+
+      const index = filteredConnections?.findIndex((conn) => conn.id === selectedConnectionId);
+      if (index !== -1) {
+        setRowsExpanded([index]);
+      } else {
+        updateUrlWithConnectionId('');
+      }
+
+      expansionFlags.current.isUrlExpansion = false;
+      expansionFlags.current.isInitialLoad = false;
+    }
+  }, [selectedConnectionId, filteredConnections]);
 
   const columns = [
     {
@@ -531,7 +609,7 @@ const ConnectionTable = ({ meshsyncControllerState, connectionMetadataState, sel
           return (
             <>
               <TooltipWrappedConnectionChip
-                tooltip={'Server: ' + server}
+                tooltip={server && 'Server: ' + server}
                 title={kind === CONNECTION_KINDS.KUBERNETES ? name : value}
                 status={getColumnValue(tableMeta.rowData, 'status', columns)}
                 onDelete={() =>
@@ -559,11 +637,16 @@ const ConnectionTable = ({ meshsyncControllerState, connectionMetadataState, sel
               {kind == 'kubernetes' && (
                 <CustomTextTooltip
                   placement="top"
-                  interactive={true}
                   title="Learn more about connection status and how to [troubleshoot Kubernetes connections](https://docs.meshery.io/guides/troubleshooting/meshery-operator-meshsync)"
                 >
                   <div style={{ display: 'inline-block' }}>
-                    <IconButton color="default">
+                    <IconButton
+                      color="default"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                      }}
+                    >
                       <InfoOutlinedIcon height={20} width={20} />
                     </IconButton>
                   </div>
@@ -611,8 +694,8 @@ const ConnectionTable = ({ meshsyncControllerState, connectionMetadataState, sel
           return (
             isEnvironmentsSuccess && (
               <div onClick={(e) => e.stopPropagation()}>
-                <Grid item xs={12} style={{ height: '5rem', width: '15rem' }}>
-                  <Grid item xs={12} style={{ marginTop: '2rem', cursor: 'pointer' }}>
+                <Grid2 size={{ xs: 12 }} style={{ height: '5rem', width: '15rem' }}>
+                  <Grid2 size={{ xs: 12 }} style={{ marginTop: '2rem', cursor: 'pointer' }}>
                     <MultiSelectWrapper
                       updating={updatingEnvs}
                       onChange={(selected, unselected) =>
@@ -636,8 +719,8 @@ const ConnectionTable = ({ meshsyncControllerState, connectionMetadataState, sel
                         )
                       }
                     />
-                  </Grid>
-                </Grid>
+                  </Grid2>
+                </Grid2>
               </div>
             )
           );
@@ -824,6 +907,7 @@ const ConnectionTable = ({ meshsyncControllerState, connectionMetadataState, sel
                     e,
                     getColumnValue(tableMeta.rowData, 'id', columns),
                     getColumnValue(tableMeta.rowData, 'kind', columns),
+                    getColumnValue(tableMeta.rowData, 'status', columns),
                   )
                 }
                 disableUnderline
@@ -939,19 +1023,20 @@ const ConnectionTable = ({ meshsyncControllerState, connectionMetadataState, sel
       },
     },
     sortOrder: {
-      name: 'name',
-      direction: 'asc',
+      name: sortOrder.split(' ')[0],
+      direction: sortOrder.split(' ')[1],
     },
     customToolbarSelect: (selected) => (
       <Button
+        color="error"
         variant="contained"
-        color="primary"
         size="large"
         onClick={() => handleDeleteConnections(selected)}
-        style={{ background: theme.palette.secondary.danger, marginRight: '10px' }}
+        sx={{ backgroundColor: `${theme.palette.error.dark} !important`, marginRight: '10px' }}
         disabled={!CAN(keys.DELETE_A_CONNECTION.action, keys.DELETE_A_CONNECTION.subject)}
+        data-testid="Button-delete-connections"
       >
-        <DeleteIcon style={iconMedium} />
+        <DeleteIcon style={iconMedium} fill={theme.palette.common.white} />
         Delete
       </Button>
     ),
@@ -991,34 +1076,53 @@ const ConnectionTable = ({ meshsyncControllerState, connectionMetadataState, sel
       return true;
     },
     onRowExpansionChange: (_, allRowsExpanded) => {
-      setRowsExpanded(allRowsExpanded.slice(-1).map((item) => item.index));
+      if (expansionFlags.current.isUrlExpansion) return;
+
+      expansionFlags.current.isHandlingExpansion = true;
+      const expandedRows = allRowsExpanded.slice(-1);
+      setRowsExpanded(expandedRows.map((item) => item.index));
+
+      if (expandedRows.length > 0 && filteredConnections) {
+        const index = expandedRows[0].index;
+        const connection = filteredConnections[index];
+
+        if (
+          connection &&
+          updateUrlWithConnectionId &&
+          (!expansionFlags.current.isInitialLoad || connection.id !== selectedConnectionId)
+        ) {
+          updateUrlWithConnectionId(connection.id);
+        }
+      } else if (updateUrlWithConnectionId && !expansionFlags.current.isInitialLoad) {
+        updateUrlWithConnectionId('');
+      }
+
+      expansionFlags.current.isHandlingExpansion = false;
     },
     renderExpandableRow: (rowData, tableMeta) => {
       const colSpan = rowData.length;
-      const connection = connections && connections[tableMeta.rowIndex];
+      const connection = filteredConnections && filteredConnections[tableMeta.rowIndex];
       return (
-        <TableCell colSpan={colSpan}>
-          <InnerTableContainer>
-            <Table>
-              <TableRow style={{ padding: 0 }}>
-                <TableCell style={{ padding: '20px 0', overflowX: 'hidden' }}>
-                  <Grid container spacing={1} style={{ textTransform: 'lowercase' }}>
-                    <ContentContainer item xs={12} md={12}>
-                      <Grid container spacing={1}>
-                        <ContentContainer item xs={12} md={12}>
-                          <FormatConnectionMetadata
-                            connection={connection}
-                            meshsyncControllerState={meshsyncControllerState}
-                          />
-                        </ContentContainer>
-                      </Grid>
-                    </ContentContainer>
-                  </Grid>
-                </TableCell>
-              </TableRow>
-            </Table>
-          </InnerTableContainer>
-        </TableCell>
+        <>
+          <TableCell colSpan={colSpan}>
+            <InnerTableContainer>
+              <Table>
+                <TableRow style={{ padding: 0 }}>
+                  <TableCell style={{ overflowX: 'hidden', padding: 0 }}>
+                    <Grid2 container style={{ textTransform: 'lowercase' }} size="grow">
+                      <ContentContainer size={{ xs: 12 }}>
+                        <FormatConnectionMetadata
+                          connection={connection}
+                          meshsyncControllerState={meshsyncControllerState}
+                        />
+                      </ContentContainer>
+                    </Grid2>
+                  </TableCell>
+                </TableRow>
+              </Table>
+            </InnerTableContainer>
+          </TableCell>
+        </>
       );
     },
   };
@@ -1035,24 +1139,10 @@ const ConnectionTable = ({ meshsyncControllerState, connectionMetadataState, sel
     return initialVisibility;
   });
 
-  useEffect(() => {
-    updateCols(columns);
-    if (isEnvironmentsError) {
-      notify({
-        message: `${ACTION_TYPES.FETCH_ENVIRONMENT.error_msg}: ${environmentsError}`,
-        event_type: EVENT_TYPES.ERROR,
-        details: environmentsError.toString(),
-      });
-    }
+  if (isConnectionLoading) {
+    return <LoadingScreen animatedIcon="AnimatedMeshery" message="Loading Connections" />;
+  }
 
-    if (isConnectionError) {
-      notify({
-        message: `${ACTION_TYPES.FETCH_CONNECTIONS.error_msg}: ${connectionError}`,
-        event_type: EVENT_TYPES.ERROR,
-        details: connectionError.toString(),
-      });
-    }
-  }, [environmentsError, connectionError, isEnvironmentsSuccess]);
   return (
     <>
       <ToolWrapper style={{ marginBottom: '5px', marginTop: '-30px' }}>
@@ -1067,14 +1157,16 @@ const ConnectionTable = ({ meshsyncControllerState, connectionMetadataState, sel
             justifyContent: 'flex-end',
           }}
         >
-          <SearchBar
-            onSearch={(value) => {
-              setSearch(value);
-            }}
-            placeholder="Search Connections..."
-            expanded={isSearchExpanded}
-            setExpanded={setIsSearchExpanded}
-          />
+          <div data-testid="ConnectionTable-search">
+            <SearchBar
+              onSearch={(value) => {
+                setSearch(value);
+              }}
+              placeholder="Search Connections..."
+              expanded={isSearchExpanded}
+              setExpanded={setIsSearchExpanded}
+            />
+          </div>
 
           <UniversalFilter
             id="ref"
@@ -1094,13 +1186,14 @@ const ConnectionTable = ({ meshsyncControllerState, connectionMetadataState, sel
       </ToolWrapper>
 
       <ResponsiveDataTable
-        data={connections}
+        data={filteredConnections}
         columns={columns}
         options={options}
         tableCols={tableCols}
         updateCols={updateCols}
         columnVisibility={columnVisibility}
       />
+
       <_PromptComponent ref={modalRef} />
       <Popover
         open={open}

@@ -1,7 +1,8 @@
 ---
 layout: release
-date: 2023-07-08
+date: 2025-06-24
 tag: null
+prerelease: null
 ---
 
 null

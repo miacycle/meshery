@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/layer5io/meshery/mesheryctl/internal/cli/root/config"
-	"github.com/layer5io/meshery/mesheryctl/pkg/utils"
-	"github.com/layer5io/meshery/server/models/environments"
+	"github.com/meshery/meshery/mesheryctl/internal/cli/root/config"
+	"github.com/meshery/meshery/mesheryctl/pkg/utils"
+	"github.com/meshery/meshery/server/models/environments"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -32,24 +32,22 @@ import (
 var createEnvironmentCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a new environments",
-	Long:  `Create a new environments by providing the name and description of the environment`,
+	Long: `Create a new environments by providing the name and description of the environment
+Documentation for environment can be found at https://docs.meshery.io/reference/mesheryctl/environment/create`,
 	Example: `
 // Create a new environment
-mesheryctl environment create --orgId [orgId] --name [name] --description [description]
-// Documentation for environment can be found at:
-https://docs.meshery.io/concepts/logical/environments
+mesheryctl environment create --orgID [orgID] --name [name] --description [description]
 `,
 	Args: func(cmd *cobra.Command, args []string) error {
+		const errMsg = "[ Organization ID | Name | Description ] aren't specified\n\nUsage: mesheryctl environment create --orgID [orgID] --name [name] --description [description]\nRun 'mesheryctl environment create --help' to see detailed help message"
+
 		// Check if all three flags are set
-		orgIdFlag, _ := cmd.Flags().GetString("orgId")
+		orgIDFlag, _ := cmd.Flags().GetString("orgID")
 		nameFlag, _ := cmd.Flags().GetString("name")
 		descriptionFlag, _ := cmd.Flags().GetString("description")
 
-		if orgIdFlag == "" || nameFlag == "" || descriptionFlag == "" {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-			return utils.ErrInvalidArgument(errors.New("Please provide a --orgId, --name, and --description flag"))
+		if orgIDFlag == "" || nameFlag == "" || descriptionFlag == "" {
+			return utils.ErrInvalidArgument(errors.New(errMsg))
 		}
 		return nil
 	},
@@ -64,6 +62,10 @@ https://docs.meshery.io/concepts/logical/environments
 		baseUrl := mctlCfg.GetBaseMesheryURL()
 		url := fmt.Sprintf("%s/api/environments", baseUrl)
 
+		orgID, _ := cmd.Flags().GetString("orgID")
+		name, _ := cmd.Flags().GetString("name")
+		description, _ := cmd.Flags().GetString("description")
+
 		if name == "" || description == "" {
 			return utils.ErrInvalidArgument(errors.New("name is required"))
 		}
@@ -71,7 +73,7 @@ https://docs.meshery.io/concepts/logical/environments
 		payload := &environments.EnvironmentPayload{
 			Name:        name,
 			Description: description,
-			OrgID:       orgID,
+			OrgId:       orgID, // TODO update OrgId in schema to OrgID
 		}
 
 		payloadBytes, err := json.Marshal(payload)
@@ -90,10 +92,17 @@ https://docs.meshery.io/concepts/logical/environments
 		}
 
 		if resp.StatusCode == http.StatusOK {
-			utils.Log.Info("environment created")
+			// TODO update OrgId in schema to OrgID
+			utils.Log.Info(fmt.Sprintf("Environment named %s created in organization id %s", payload.Name, payload.OrgId))
 			return nil
 		}
 		utils.Log.Info("Error creating environment")
 		return nil
 	},
+}
+
+func init() {
+	createEnvironmentCmd.Flags().StringP("orgID", "o", "", "Organization ID")
+	createEnvironmentCmd.Flags().StringP("name", "n", "", "Name of the environment")
+	createEnvironmentCmd.Flags().StringP("description", "d", "", "Description of the environment")
 }

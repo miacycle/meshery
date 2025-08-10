@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
-import { bindActionCreators } from 'redux';
-import { connect } from 'react-redux';
-import { Button, CatalogIcon, Grid, Switch, Typography, useTheme } from '@layer5/sistent';
+import { Button, CatalogIcon, Grid2, Switch, Typography, useTheme } from '@sistent/sistent';
 import { useGetUserPrefQuery, useUpdateUserPrefMutation } from '@/rtk-query/user';
 import { Adapters } from '../components/extensions';
 import DefaultError from '@/components/General/error-404';
-import { toggleCatalogContent } from '../lib/store';
 import { EVENT_TYPES } from '../lib/event-types';
 import { EXTENSION_NAMES } from '../utils/Enum';
 import { useNotification } from '../utils/hooks/useNotification';
@@ -14,8 +11,9 @@ import CAN from '@/utils/can';
 import { keys } from '@/utils/permission_constants';
 import { LARGE_6_MED_12_GRID_STYLE } from '../css/grid.style';
 import { CardContainer, FrontSideDescription, ImageWrapper } from '../css/icons.styles';
-
-const INITIAL_GRID_SIZE = { lg: 6, md: 12, xs: 12 };
+import { useDispatch, useSelector } from 'react-redux';
+import { toggleCatalogContent, updatePage } from '@/store/slices/mesheryUi';
+import { getPath } from 'lib/path';
 
 const MeshMapSignUpcard = ({ hasAccessToMeshMap = false }) => {
   const handleSignUp = (e) => {
@@ -24,7 +22,7 @@ const MeshMapSignUpcard = ({ hasAccessToMeshMap = false }) => {
   };
 
   return (
-    <Grid item {...LARGE_6_MED_12_GRID_STYLE}>
+    <Grid2 size={LARGE_6_MED_12_GRID_STYLE}>
       <CardContainer>
         <Typography data-testid="kanvas-signup-heading" variant="h5" component="div">
           Kanvas
@@ -32,8 +30,7 @@ const MeshMapSignUpcard = ({ hasAccessToMeshMap = false }) => {
 
         <FrontSideDescription variant="body">
           <ImageWrapper src="/static/img/kanvas-icon-color.svg" />
-          Collaboratively design and manage your Kubernetes clusters, service mesh deployments, and
-          cloud native apps. Kanvas is now publicly available.{' '}
+          Collaboratively design and manage your infra and apps. Kanvas is now publicly available.{' '}
           {!hasAccessToMeshMap && 'Sign-up today to for access!'}
         </FrontSideDescription>
         {
@@ -49,7 +46,7 @@ const MeshMapSignUpcard = ({ hasAccessToMeshMap = false }) => {
           </div>
         }
       </CardContainer>
-    </Grid>
+    </Grid2>
   );
 };
 
@@ -77,7 +74,7 @@ const MeshMapSnapShotCard = ({ githubActionEnabled = false }) => {
 
   return (
     <>
-      <Grid item {...LARGE_6_MED_12_GRID_STYLE}>
+      <Grid2 size={LARGE_6_MED_12_GRID_STYLE}>
         <CardContainer>
           <Typography data-testid="kanvas-snapshot-heading" variant="h5" component="div">
             GitHub Action: Kanvas Snapshot
@@ -101,7 +98,7 @@ const MeshMapSnapShotCard = ({ githubActionEnabled = false }) => {
             </Button>
           </div>
         </CardContainer>
-      </Grid>
+      </Grid2>
     </>
   );
 };
@@ -132,7 +129,7 @@ const MesheryPerformanceAction = ({ githubActionEnabled = false }) => {
 
   return (
     <>
-      <Grid item {...LARGE_6_MED_12_GRID_STYLE}>
+      <Grid2 size={LARGE_6_MED_12_GRID_STYLE}>
         <CardContainer>
           <Typography data-testid="performance-analysis-heading" variant="h5" component="div">
             GitHub Action: Performance Analysis
@@ -155,7 +152,7 @@ const MesheryPerformanceAction = ({ githubActionEnabled = false }) => {
             </Button>
           </div>
         </CardContainer>
-      </Grid>
+      </Grid2>
     </>
   );
 };
@@ -183,7 +180,7 @@ const MesheryDockerExtension = () => {
 
   return (
     <>
-      <Grid item {...LARGE_6_MED_12_GRID_STYLE}>
+      <Grid2 size={LARGE_6_MED_12_GRID_STYLE}>
         <CardContainer>
           <Typography data-testid="docker-extension-heading" variant="h5" component="div">
             Meshery Docker Extension
@@ -208,7 +205,7 @@ const MesheryDockerExtension = () => {
             </div>
           }
         </CardContainer>
-      </Grid>
+      </Grid2>
     </>
   );
 };
@@ -228,6 +225,59 @@ const MesheryDesignEmbedLogo = () => {
   );
 };
 
+const MesheryHelmKanvasLogo = () => {
+  return (
+    <img
+      style={{
+        paddingRight: '1rem',
+        height: 'auto',
+        width: 'auto',
+        maxWidth: '120px',
+        maxHeight: '75px',
+      }}
+      src="/static/img/helm_chart.svg"
+    />
+  );
+};
+
+const MesheryHelmKanvasExtension = () => {
+  const handleLearnMore = (e) => {
+    window.open('https://docs.meshery.io/extensions/helm-kanvas-snapshot', '_blank');
+    e.stopPropagation();
+  };
+
+  return (
+    <>
+      <Grid2 size={LARGE_6_MED_12_GRID_STYLE}>
+        <CardContainer>
+          <Typography variant="h5" component="div">
+            Kanvas Snapshot Helm Plugin
+          </Typography>
+
+          <FrontSideDescription variant="body">
+            <MesheryHelmKanvasLogo />
+            The Kanvas Snapshot Helm Plugin allows you to generate a visual snapshot of your Helm
+            charts directly from the command line. It simplifies the process of creating Meshery
+            Snapshots, providing a visual representation of packaged Helm charts.
+          </FrontSideDescription>
+          {
+            <div style={{ textAlign: 'right' }}>
+              <Button
+                variant="contained"
+                color="primary"
+                data-testid="helm-kanvas-learn-more-btn"
+                onClick={(e) => handleLearnMore(e)}
+              >
+                Learn More
+              </Button>
+            </div>
+          }
+        </CardContainer>
+      </Grid2>
+    </>
+  );
+};
+
 const MesheryDesignEmbedExtension = () => {
   const handleLearnMore = (e) => {
     window.open('https://docs.layer5.io/kanvas/designer/embedding-designs/', '_blank');
@@ -236,7 +286,7 @@ const MesheryDesignEmbedExtension = () => {
 
   return (
     <>
-      <Grid item {...LARGE_6_MED_12_GRID_STYLE}>
+      <Grid2 size={LARGE_6_MED_12_GRID_STYLE}>
         <CardContainer>
           <Typography variant="h5" component="div">
             Meshery Design Embed
@@ -261,7 +311,7 @@ const MesheryDesignEmbedExtension = () => {
             </div>
           }
         </CardContainer>
-      </Grid>
+      </Grid2>
     </>
   );
 };
@@ -271,12 +321,21 @@ export const WrappedMeshMapSnapShopCard = MeshMapSnapShotCard;
 export const WrappedMesheryPerformanceAction = MesheryPerformanceAction;
 export const WrappedMesheryDockerExtension = MesheryDockerExtension;
 export const WrappedMesheryEmbedDesignExtension = MesheryDesignEmbedExtension;
-const Extensions = ({ toggleCatalogContent, capabilitiesRegistry }) => {
+export const WrappedMesheryHelmKanvasExtension = MesheryHelmKanvasExtension;
+
+const Extensions = () => {
   const [catalogContent, setCatalogContent] = useState(true);
   const [extensionPreferences, setExtensionPreferences] = useState({});
   const [hasAccessToMeshMap, setHasAccessToMeshMap] = useState(false);
   const { notify } = useNotification();
   const [updateUserPref] = useUpdateUserPrefMutation();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(updatePage({ path: getPath(), title: 'Extensions' }));
+  }, []);
+
+  const { capabilitiesRegistry } = useSelector((state) => state.ui);
 
   const {
     data: userData,
@@ -286,7 +345,7 @@ const Extensions = ({ toggleCatalogContent, capabilitiesRegistry }) => {
   } = useGetUserPrefQuery();
 
   const handleToggle = () => {
-    toggleCatalogContent({ catalogVisibility: !catalogContent });
+    dispatch(toggleCatalogContent({ catalogVisibility: !catalogContent }));
     setCatalogContent(!catalogContent);
     handleCatalogPreference(!catalogContent);
   };
@@ -336,13 +395,14 @@ const Extensions = ({ toggleCatalogContent, capabilitiesRegistry }) => {
           <title>Extensions | Meshery</title>
         </Head>
         {CAN(keys.VIEW_EXTENSIONS.action, keys.VIEW_EXTENSIONS.subject) ? (
-          <Grid container spacing={1}>
+          <Grid2 container spacing={1} size="grow">
             <WrappedMeshMapSnapShopCard githubActionEnabled={false} />
             <WrappedMesheryPerformanceAction githubActionEnabled={false} />
             <WrappedMeshMapSignupCard hasAccessToMeshMap={hasAccessToMeshMap} />
+            <WrappedMesheryHelmKanvasExtension />
             <WrappedMesheryDockerExtension />
             <WrappedMesheryEmbedDesignExtension />
-            <Grid item {...INITIAL_GRID_SIZE}>
+            <Grid2 size={LARGE_6_MED_12_GRID_STYLE}>
               <CardContainer>
                 <Typography data-testid="catalog-section-heading" variant="h5" component="div">
                   {'Meshery Catalog'}
@@ -372,12 +432,13 @@ const Extensions = ({ toggleCatalogContent, capabilitiesRegistry }) => {
                   </div>
                 </FrontSideDescription>
 
-                <Grid
+                <Grid2
                   container
                   spacing={2}
                   direction="row"
                   justifyContent="space-between"
                   alignItems="baseline"
+                  size="grow"
                   style={{
                     position: 'absolute',
                     paddingRight: '3rem',
@@ -408,11 +469,11 @@ const Extensions = ({ toggleCatalogContent, capabilitiesRegistry }) => {
                       color="primary"
                     />
                   </div>
-                </Grid>
+                </Grid2>
               </CardContainer>
-            </Grid>
+            </Grid2>
             <Adapters />
-          </Grid>
+          </Grid2>
         ) : (
           <DefaultError />
         )}
@@ -421,13 +482,4 @@ const Extensions = ({ toggleCatalogContent, capabilitiesRegistry }) => {
   );
 };
 
-const mapStateToProps = (state) => ({
-  catalogVisibility: state.get('catalogVisibility'),
-  capabilitiesRegistry: state.get('capabilitiesRegistry'),
-});
-
-const mapDispatchToProps = (dispatch) => ({
-  toggleCatalogContent: bindActionCreators(toggleCatalogContent, dispatch),
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(Extensions);
+export default Extensions;

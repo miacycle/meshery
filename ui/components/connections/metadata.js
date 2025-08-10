@@ -1,8 +1,6 @@
 import React from 'react';
-import { Grid, List, ListItem, ListItemText, Box, styled } from '@layer5/sistent';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
-import { updateProgress } from '../../lib/store';
+import { Grid2, List, ListItem, ListItemText, Box, styled, useTheme } from '@sistent/sistent';
+
 import {
   FormatId,
   FormatStructuredData,
@@ -21,15 +19,21 @@ import { TooltipWrappedConnectionChip } from './ConnectionChip';
 import { CONTROLLER_STATES } from '../../utils/Enum';
 import { formatToTitleCase } from '../../utils/utils';
 
-import { ColumnWrapper, ContentContainer, OperationButton } from './styles';
+import { ColumnWrapper, ContentContainer, OperationButton, FormatterWrapper } from './styles';
 
 const DISABLED = 'DISABLED';
 const KUBERNETES = 'kubernetes';
 const MESHERY = 'meshery';
 
-const customIdFormatter = (title, id) => <KeyValue Key={title} Value={<FormatId id={id} />} />;
+const customIdFormatter = (title, id) => (
+  <FormatterWrapper>
+    <KeyValue Key={title} Value={<FormatId id={id} />} />
+  </FormatterWrapper>
+);
 const customDateFormatter = (title, date) => (
-  <KeyValue Key={title} Value={<FormattedDate date={date} />} />
+  <FormatterWrapper>
+    <KeyValue Key={title} Value={<FormattedDate date={date} />} />
+  </FormatterWrapper>
 );
 
 const DefaultPropertyFormatters = {
@@ -79,11 +83,11 @@ const KubernetesMetadataFormatter = ({ meshsyncControllerState, connection, meta
     getControllerStatesByConnectionID(connection.id);
 
   return (
-    <Grid container spacing={1} sx={{ textTransform: 'none' }}>
-      <Grid item xs={12} md={6}>
+    <Grid2 container spacing={1} sx={{ textTransform: 'none' }} size="grow">
+      <Grid2 size={{ xs: 12, md: 6 }}>
         <ColumnWrapper>
-          <Grid container spacing={1}>
-            <OperationButton item xs={12} md={5}>
+          <Grid2 container spacing={1} size="grow">
+            <OperationButton size={{ xs: 12, md: 5 }}>
               <List>
                 <ListItem>
                   <TooltipWrappedConnectionChip
@@ -96,9 +100,9 @@ const KubernetesMetadataFormatter = ({ meshsyncControllerState, connection, meta
                 </ListItem>
               </List>
             </OperationButton>
-          </Grid>
-          <ContentContainer container spacing={1}>
-            <Grid item xs={12} md={5}>
+          </Grid2>
+          <ContentContainer container spacing={1} size="grow">
+            <Grid2 size={{ xs: 12, md: 5 }}>
               <List>
                 <ListItem>
                   <StyledListItemText primary="Name" secondary={metadata.name} />
@@ -107,8 +111,8 @@ const KubernetesMetadataFormatter = ({ meshsyncControllerState, connection, meta
                   <StyledListItemText primary="K8s Version" secondary={metadata.version} />
                 </ListItem>
               </List>
-            </Grid>
-            <Grid item xs={12} md={5}>
+            </Grid2>
+            <Grid2 size={{ xs: 12, md: 5 }}>
               <List>
                 <ListItem>
                   <StyledListItemText
@@ -123,8 +127,8 @@ const KubernetesMetadataFormatter = ({ meshsyncControllerState, connection, meta
                   />
                 </ListItem>
               </List>
-            </Grid>
-            <Grid item xs={12} md={5}>
+            </Grid2>
+            <Grid2 size={{ xs: 12, md: 5 }}>
               <List>
                 <ListItem>
                   <StyledListItemText
@@ -137,14 +141,14 @@ const KubernetesMetadataFormatter = ({ meshsyncControllerState, connection, meta
                   />
                 </ListItem>
               </List>
-            </Grid>
+            </Grid2>
           </ContentContainer>
         </ColumnWrapper>
-      </Grid>
-      <Grid item xs={12} md={6}>
+      </Grid2>
+      <Grid2 size={{ xs: 12, md: 6 }}>
         <ColumnWrapper>
-          <Grid container spacing={1}>
-            <OperationButton item xs={12} md={4}>
+          <Grid2 container spacing={1} size="grow">
+            <OperationButton size={{ xs: 12, md: 4 }}>
               <List>
                 <ListItem>
                   <TooltipWrappedConnectionChip
@@ -162,7 +166,7 @@ const KubernetesMetadataFormatter = ({ meshsyncControllerState, connection, meta
 
             {(meshSyncState || natsState) && (
               <>
-                <Grid item xs={12} md={4}>
+                <Grid2 size={{ xs: 12, md: 4 }}>
                   <List>
                     <ListItem>
                       <TooltipWrappedConnectionChip
@@ -175,8 +179,8 @@ const KubernetesMetadataFormatter = ({ meshsyncControllerState, connection, meta
                       />
                     </ListItem>
                   </List>
-                </Grid>
-                <Grid item xs={12} md={4}>
+                </Grid2>
+                <Grid2 size={{ xs: 12, md: 4 }}>
                   <List>
                     <ListItem>
                       <TooltipWrappedConnectionChip
@@ -189,13 +193,13 @@ const KubernetesMetadataFormatter = ({ meshsyncControllerState, connection, meta
                       />
                     </ListItem>
                   </List>
-                </Grid>
+                </Grid2>
               </>
             )}
-          </Grid>
+          </Grid2>
 
-          <ContentContainer container spacing={1}>
-            <Grid item xs={12} md={5}>
+          <ContentContainer container spacing={1} size="grow">
+            <Grid2 size={{ xs: 12, md: 5 }}>
               <List>
                 <ListItem>
                   <StyledListItemText
@@ -207,8 +211,8 @@ const KubernetesMetadataFormatter = ({ meshsyncControllerState, connection, meta
                   <StyledListItemText primary="Operator Version" secondary={operatorVersion} />
                 </ListItem>
               </List>
-            </Grid>
-            <Grid item xs={12} md={5}>
+            </Grid2>
+            <Grid2 size={{ xs: 12, md: 5 }}>
               <List>
                 <ListItem>
                   <StyledListItemText
@@ -220,8 +224,8 @@ const KubernetesMetadataFormatter = ({ meshsyncControllerState, connection, meta
                   <StyledListItemText primary="MeshSync Version" secondary={meshSyncVersion} />
                 </ListItem>
               </List>
-            </Grid>
-            <Grid item xs={12} md={5}>
+            </Grid2>
+            <Grid2 size={{ xs: 12, md: 5 }}>
               <List>
                 <ListItem>
                   <StyledListItemText
@@ -233,11 +237,11 @@ const KubernetesMetadataFormatter = ({ meshsyncControllerState, connection, meta
                   <StyledListItemText primary="NATS Version" secondary={natsVersion} />
                 </ListItem>
               </List>
-            </Grid>
+            </Grid2>
           </ContentContainer>
         </ColumnWrapper>
-      </Grid>
-    </Grid>
+      </Grid2>
+    </Grid2>
   );
 };
 
@@ -261,6 +265,7 @@ const MesheryMetadataFormatter = ({ connection }) => {
 };
 
 export const MeshSyncDataFormatter = ({ metadata }) => {
+  const theme = useTheme();
   const uiSchema = createColumnUiSchema({
     metadata,
     numCols: {
@@ -270,15 +275,18 @@ export const MeshSyncDataFormatter = ({ metadata }) => {
   });
 
   return (
-    <FormatStructuredData
-      data={metadata}
-      uiSchema={uiSchema}
-      propertyFormatters={DefaultPropertyFormatters}
-    />
+    <Box backgroundColor={theme.palette.background.card} width="100%" padding={'1rem'}>
+      <FormatStructuredData
+        data={metadata}
+        uiSchema={uiSchema}
+        propertyFormatters={DefaultPropertyFormatters}
+      />
+    </Box>
   );
 };
 
 const FormatConnectionMetadata = (props) => {
+  const theme = useTheme();
   const { connection, meshsyncControllerState } = props;
   const formatterByKind = {
     [KUBERNETES]: () => (
@@ -298,20 +306,10 @@ const FormatConnectionMetadata = (props) => {
   };
   const formatter = formatterByKind[connection.kind] || formatterByKind.default;
   return (
-    <Box
-      sx={{
-        padding: '1rem',
-      }}
-    >
+    <Box backgroundColor={theme.palette.background.card} padding={'1rem'}>
       {formatter()}
     </Box>
   );
 };
 
-const mapDispatchToProps = (dispatch) => ({
-  updateProgress: bindActionCreators(updateProgress, dispatch),
-});
-
-const mapStateToProps = () => ({});
-
-export default connect(mapStateToProps, mapDispatchToProps)(FormatConnectionMetadata);
+export default FormatConnectionMetadata;

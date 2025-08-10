@@ -3,18 +3,19 @@ import {
   AvatarGroup,
   CircularProgress,
   FormControl,
-  Grid,
+  Grid2,
   IconButton,
   MenuItem,
   TextField,
   Toolbar,
   CustomTooltip,
-} from '@layer5/sistent';
+  styled,
+} from '@sistent/sistent';
 import React, { useEffect, useRef, useState } from 'react';
 import AppBarComponent from './styledComponents/AppBar';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
-import { NoSsr } from '@layer5/sistent';
+import { NoSsr } from '@sistent/sistent';
 import { iconMedium } from '../../../css/icons.styles';
 import { useMeshModelComponents } from '../../../utils/hooks/useMeshModelComponents';
 import { getWebAdress } from '../../../utils/webApis';
@@ -27,6 +28,12 @@ import TooltipButton from '../../../utils/TooltipButton';
 import { SaveAs as SaveAsIcon } from '@mui/icons-material';
 import CAN from '@/utils/can';
 import { keys } from '@/utils/permission_constants';
+
+const ScrollContainer = styled('div')({
+  overflowY: 'auto',
+  width: '100%',
+  height: '58.5vh',
+});
 
 export default function DesignConfigurator() {
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -212,26 +219,34 @@ export default function DesignConfigurator() {
           )}
         </Toolbar>
       </AppBarComponent>
-      <Grid container spacing={3}>
+      <Grid2 container spacing={3} size="grow">
         {meshmodelComponents?.[selectedModel] && (
-          <Grid item xs={12} md={6}>
-            {meshmodelComponents[selectedModel]?.[0]?.components?.map(
-              function ShowRjsfComponentsLazily(trimmedComponent, idx) {
-                const hasInvalidSchema = !!trimmedComponent.metadata?.hasInvalidSchema;
-                return (
-                  <LazyComponentForm
-                    key={`${trimmedComponent.component.kind}-${idx}`}
-                    component={trimmedComponent}
-                    onSettingsChange={onSettingsChange(trimmedComponent, formReference)}
-                    reference={formReference}
-                    disabled={hasInvalidSchema}
-                  />
-                );
-              },
-            )}
-          </Grid>
+          <Grid2
+            size={{ xs: 12, md: 6 }}
+            sx={{
+              height: '100%',
+              display: 'flex',
+            }}
+          >
+            <ScrollContainer>
+              {meshmodelComponents[selectedModel]?.[0]?.components?.map(
+                function ShowRjsfComponentsLazily(trimmedComponent, idx) {
+                  const hasInvalidSchema = !!trimmedComponent.metadata?.hasInvalidSchema;
+                  return (
+                    <LazyComponentForm
+                      key={`${trimmedComponent.component.kind}-${idx}`}
+                      component={trimmedComponent}
+                      onSettingsChange={onSettingsChange(trimmedComponent, formReference)}
+                      reference={formReference}
+                      disabled={hasInvalidSchema}
+                    />
+                  );
+                },
+              )}
+            </ScrollContainer>
+          </Grid2>
         )}
-        <Grid item xs={12} md={selectedCategory && selectedModel ? 6 : 12}>
+        <Grid2 size={{ xs: 12, md: selectedCategory && selectedModel ? 6 : 12 }}>
           <CodeEditor
             yaml={designYaml}
             onChange={(_val, _view, update) => {
@@ -271,8 +286,8 @@ export default function DesignConfigurator() {
               )}
             </AvatarGroup>
           )}
-        </Grid>
-      </Grid>
+        </Grid2>
+      </Grid2>
     </NoSsr>
   );
 }

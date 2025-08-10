@@ -14,7 +14,8 @@ import {
   StepLabel,
   Stepper,
   TableContainer,
-} from '@layer5/sistent';
+  Grid2,
+} from '@sistent/sistent';
 
 export const CreateButton = styled(Grid)({
   display: 'flex',
@@ -25,10 +26,8 @@ export const CreateButton = styled(Grid)({
 
 export const InnerTableContainer = styled(TableContainer)(({ theme }) => ({
   background: theme.palette.background.card,
-  margin: '10px 10px 10px 13px',
   borderLeft: `9px solid ${theme.palette.background.default} !important`,
   borderRadius: '10px 0 0 10px',
-  width: 'calc(100% - 23px)',
   border: 'none',
   overflowX: 'hidden',
 }));
@@ -91,8 +90,6 @@ export const ConnectionIconText = styled('div')({
 
 export const ChipWrapper = styled(Chip)(({ theme }) => ({
   width: '13rem',
-  maxWidth: '13rem',
-  minWidth: '9rem',
   textAlign: 'left',
   cursor: 'pointer',
   '& .MuiChip-label': {
@@ -220,13 +217,16 @@ export const ColumnWrapper = styled('div')(({ theme }) => ({
   background: `${theme.palette.background.secondary}10`,
 }));
 
-export const OperationButton = styled(Grid)(({ theme }) => ({
+export const OperationButton = styled(Grid2)(({ theme }) => ({
   [theme?.breakpoints?.down(1180)]: {
     marginRight: '25px',
   },
 }));
 
-export const ContentContainer = styled(Grid)(({ theme }) => ({
+export const FormatterWrapper = styled(Box)({
+  marginBlock: '0.4rem',
+});
+export const ContentContainer = styled(Grid2)(({ theme }) => ({
   [theme?.breakpoints?.down(1050)]: {
     flexDirection: 'column',
   },

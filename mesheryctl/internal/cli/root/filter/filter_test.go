@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/jarcoal/httpmock"
-	"github.com/layer5io/meshery/mesheryctl/pkg/utils"
+	"github.com/meshery/meshery/mesheryctl/pkg/utils"
 )
 
 func TestFilterCmd(t *testing.T) {
@@ -118,7 +118,7 @@ func TestFilterCmd(t *testing.T) {
 			buff := utils.SetupMeshkitLoggerTesting(t, false)
 			cmd := FilterCmd
 			cmd.SetArgs(tc.Args)
-			cmd.SetOutput(buff)
+			cmd.SetOut(buff)
 
 			err := cmd.Execute()
 			if err != nil {

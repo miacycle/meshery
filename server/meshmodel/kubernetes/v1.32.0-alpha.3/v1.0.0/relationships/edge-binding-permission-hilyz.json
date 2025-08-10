@@ -21,27 +21,29 @@
     "registrant": {
       "id": "00000000-0000-0000-0000-000000000000",
       "name": "",
-      "credential_id": "00000000-0000-0000-0000-000000000000",
       "type": "",
       "sub_type": "",
       "kind": "",
       "status": "",
-      "user_id": "00000000-0000-0000-0000-000000000000",
       "created_at": "0001-01-01T00:00:00Z",
       "updated_at": "0001-01-01T00:00:00Z",
-      "deleted_at": "0001-01-01T00:00:00Z"
+      "deleted_at": null,
+      "schemaVersion": ""
     },
     "connection_id": "00000000-0000-0000-0000-000000000000",
     "category": {
+      "id": "00000000-0000-0000-0000-000000000000",
       "name": ""
     },
+    "subCategory": "",
+    "metadata": null,
     "model": {
       "version": "v1.32.0-alpha.3"
     },
-    "components": null,
-    "relationships": null,
     "components_count": 0,
-    "relationships_count": 0
+    "relationships_count": 0,
+    "components": null,
+    "relationships": null
   },
   "schemaVersion": "relationships.meshery.io/v1alpha3",
   "selectors": [
@@ -86,6 +88,7 @@
                 }
               ]
             },
+            "match_strategy_matrix": null,
             "model": {
               "id": "00000000-0000-0000-0000-000000000000",
               "schemaVersion": "",
@@ -104,19 +107,23 @@
                 "user_id": "00000000-0000-0000-0000-000000000000",
                 "created_at": "0001-01-01T00:00:00Z",
                 "updated_at": "0001-01-01T00:00:00Z",
-                "deleted_at": "0001-01-01T00:00:00Z"
+                "deleted_at": "0001-01-01T00:00:00Z",
+                "schemaVersion": ""
               },
               "connection_id": "00000000-0000-0000-0000-000000000000",
               "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
                 "name": ""
               },
+              "subCategory": "",
+              "metadata": null,
               "model": {
                 "version": ""
               },
-              "components": null,
-              "relationships": null,
               "components_count": 0,
-              "relationships_count": 0
+              "relationships_count": 0,
+              "components": null,
+              "relationships": null
             },
             "patch": null
           },
@@ -158,6 +165,7 @@
                 }
               ]
             },
+            "match_strategy_matrix": null,
             "model": {
               "id": "00000000-0000-0000-0000-000000000000",
               "schemaVersion": "",
@@ -176,19 +184,23 @@
                 "user_id": "00000000-0000-0000-0000-000000000000",
                 "created_at": "0001-01-01T00:00:00Z",
                 "updated_at": "0001-01-01T00:00:00Z",
-                "deleted_at": "0001-01-01T00:00:00Z"
+                "deleted_at": "0001-01-01T00:00:00Z",
+                "schemaVersion": ""
               },
               "connection_id": "00000000-0000-0000-0000-000000000000",
               "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
                 "name": ""
               },
+              "subCategory": "",
+              "metadata": null,
               "model": {
                 "version": ""
               },
-              "components": null,
-              "relationships": null,
               "components_count": 0,
-              "relationships_count": 0
+              "relationships_count": 0,
+              "components": null,
+              "relationships": null
             },
             "patch": null
           }
@@ -224,6 +236,7 @@
                 }
               ]
             },
+            "match_strategy_matrix": null,
             "model": {
               "id": "00000000-0000-0000-0000-000000000000",
               "schemaVersion": "",
@@ -242,19 +255,23 @@
                 "user_id": "00000000-0000-0000-0000-000000000000",
                 "created_at": "0001-01-01T00:00:00Z",
                 "updated_at": "0001-01-01T00:00:00Z",
-                "deleted_at": "0001-01-01T00:00:00Z"
+                "deleted_at": "0001-01-01T00:00:00Z",
+                "schemaVersion": ""
               },
               "connection_id": "00000000-0000-0000-0000-000000000000",
               "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
                 "name": ""
               },
+              "subCategory": "",
+              "metadata": null,
               "model": {
                 "version": ""
               },
-              "components": null,
-              "relationships": null,
               "components_count": 0,
-              "relationships_count": 0
+              "relationships_count": 0,
+              "components": null,
+              "relationships": null
             },
             "patch": null
           },
@@ -288,6 +305,7 @@
                 }
               ]
             },
+            "match_strategy_matrix": null,
             "model": {
               "id": "00000000-0000-0000-0000-000000000000",
               "schemaVersion": "",
@@ -306,19 +324,23 @@
                 "user_id": "00000000-0000-0000-0000-000000000000",
                 "created_at": "0001-01-01T00:00:00Z",
                 "updated_at": "0001-01-01T00:00:00Z",
-                "deleted_at": "0001-01-01T00:00:00Z"
+                "deleted_at": "0001-01-01T00:00:00Z",
+                "schemaVersion": ""
               },
               "connection_id": "00000000-0000-0000-0000-000000000000",
               "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
                 "name": ""
               },
+              "subCategory": "",
+              "metadata": null,
               "model": {
                 "version": ""
               },
-              "components": null,
-              "relationships": null,
               "components_count": 0,
-              "relationships_count": 0
+              "relationships_count": 0,
+              "components": null,
+              "relationships": null
             },
             "patch": null
           }
@@ -330,6 +352,7 @@
             "id": null,
             "kind": "ClusterRole",
             "match": {},
+            "match_strategy_matrix": null,
             "model": {
               "id": "00000000-0000-0000-0000-000000000000",
               "schemaVersion": "",
@@ -340,27 +363,29 @@
               "registrant": {
                 "id": "00000000-0000-0000-0000-000000000000",
                 "name": "",
-                "credential_id": "00000000-0000-0000-0000-000000000000",
                 "type": "",
                 "sub_type": "",
                 "kind": "github",
                 "status": "",
-                "user_id": "00000000-0000-0000-0000-000000000000",
                 "created_at": "0001-01-01T00:00:00Z",
                 "updated_at": "0001-01-01T00:00:00Z",
-                "deleted_at": "0001-01-01T00:00:00Z"
+                "deleted_at": null,
+                "schemaVersion": ""
               },
               "connection_id": "00000000-0000-0000-0000-000000000000",
               "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
                 "name": ""
               },
+              "subCategory": "",
+              "metadata": null,
               "model": {
                 "version": ""
               },
-              "components": null,
-              "relationships": null,
               "components_count": 0,
-              "relationships_count": 0
+              "relationships_count": 0,
+              "components": null,
+              "relationships": null
             },
             "patch": null
           },
@@ -368,6 +393,7 @@
             "id": null,
             "kind": "Role",
             "match": {},
+            "match_strategy_matrix": null,
             "model": {
               "id": "00000000-0000-0000-0000-000000000000",
               "schemaVersion": "",
@@ -378,27 +404,29 @@
               "registrant": {
                 "id": "00000000-0000-0000-0000-000000000000",
                 "name": "",
-                "credential_id": "00000000-0000-0000-0000-000000000000",
                 "type": "",
                 "sub_type": "",
                 "kind": "github",
                 "status": "",
-                "user_id": "00000000-0000-0000-0000-000000000000",
                 "created_at": "0001-01-01T00:00:00Z",
                 "updated_at": "0001-01-01T00:00:00Z",
-                "deleted_at": "0001-01-01T00:00:00Z"
+                "deleted_at": null,
+                "schemaVersion": ""
               },
               "connection_id": "00000000-0000-0000-0000-000000000000",
               "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
                 "name": ""
               },
+              "subCategory": "",
+              "metadata": null,
               "model": {
                 "version": ""
               },
-              "components": null,
-              "relationships": null,
               "components_count": 0,
-              "relationships_count": 0
+              "relationships_count": 0,
+              "components": null,
+              "relationships": null
             },
             "patch": null
           },
@@ -406,6 +434,7 @@
             "id": null,
             "kind": "ClusterRoleBinding",
             "match": {},
+            "match_strategy_matrix": null,
             "model": {
               "id": "00000000-0000-0000-0000-000000000000",
               "schemaVersion": "",
@@ -416,27 +445,29 @@
               "registrant": {
                 "id": "00000000-0000-0000-0000-000000000000",
                 "name": "",
-                "credential_id": "00000000-0000-0000-0000-000000000000",
                 "type": "",
                 "sub_type": "",
                 "kind": "github",
                 "status": "",
-                "user_id": "00000000-0000-0000-0000-000000000000",
                 "created_at": "0001-01-01T00:00:00Z",
                 "updated_at": "0001-01-01T00:00:00Z",
-                "deleted_at": "0001-01-01T00:00:00Z"
+                "deleted_at": null,
+                "schemaVersion": ""
               },
               "connection_id": "00000000-0000-0000-0000-000000000000",
               "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
                 "name": ""
               },
+              "subCategory": "",
+              "metadata": null,
               "model": {
                 "version": ""
               },
-              "components": null,
-              "relationships": null,
               "components_count": 0,
-              "relationships_count": 0
+              "relationships_count": 0,
+              "components": null,
+              "relationships": null
             },
             "patch": null
           },
@@ -444,6 +475,7 @@
             "id": null,
             "kind": "RoleBinding",
             "match": {},
+            "match_strategy_matrix": null,
             "model": {
               "id": "00000000-0000-0000-0000-000000000000",
               "schemaVersion": "",
@@ -454,27 +486,29 @@
               "registrant": {
                 "id": "00000000-0000-0000-0000-000000000000",
                 "name": "",
-                "credential_id": "00000000-0000-0000-0000-000000000000",
                 "type": "",
                 "sub_type": "",
                 "kind": "github",
                 "status": "",
-                "user_id": "00000000-0000-0000-0000-000000000000",
                 "created_at": "0001-01-01T00:00:00Z",
                 "updated_at": "0001-01-01T00:00:00Z",
-                "deleted_at": "0001-01-01T00:00:00Z"
+                "deleted_at": null,
+                "schemaVersion": ""
               },
               "connection_id": "00000000-0000-0000-0000-000000000000",
               "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
                 "name": ""
               },
+              "subCategory": "",
+              "metadata": null,
               "model": {
                 "version": ""
               },
-              "components": null,
-              "relationships": null,
               "components_count": 0,
-              "relationships_count": 0
+              "relationships_count": 0,
+              "components": null,
+              "relationships": null
             },
             "patch": null
           }
@@ -484,6 +518,7 @@
             "id": null,
             "kind": "ClusterRole",
             "match": {},
+            "match_strategy_matrix": null,
             "model": {
               "id": "00000000-0000-0000-0000-000000000000",
               "schemaVersion": "",
@@ -494,27 +529,29 @@
               "registrant": {
                 "id": "00000000-0000-0000-0000-000000000000",
                 "name": "",
-                "credential_id": "00000000-0000-0000-0000-000000000000",
                 "type": "",
                 "sub_type": "",
                 "kind": "github",
                 "status": "",
-                "user_id": "00000000-0000-0000-0000-000000000000",
                 "created_at": "0001-01-01T00:00:00Z",
                 "updated_at": "0001-01-01T00:00:00Z",
-                "deleted_at": "0001-01-01T00:00:00Z"
+                "deleted_at": null,
+                "schemaVersion": ""
               },
               "connection_id": "00000000-0000-0000-0000-000000000000",
               "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
                 "name": ""
               },
+              "subCategory": "",
+              "metadata": null,
               "model": {
                 "version": ""
               },
-              "components": null,
-              "relationships": null,
               "components_count": 0,
-              "relationships_count": 0
+              "relationships_count": 0,
+              "components": null,
+              "relationships": null
             },
             "patch": null
           },
@@ -522,6 +559,7 @@
             "id": null,
             "kind": "Role",
             "match": {},
+            "match_strategy_matrix": null,
             "model": {
               "id": "00000000-0000-0000-0000-000000000000",
               "schemaVersion": "",
@@ -532,27 +570,29 @@
               "registrant": {
                 "id": "00000000-0000-0000-0000-000000000000",
                 "name": "",
-                "credential_id": "00000000-0000-0000-0000-000000000000",
                 "type": "",
                 "sub_type": "",
                 "kind": "github",
                 "status": "",
-                "user_id": "00000000-0000-0000-0000-000000000000",
                 "created_at": "0001-01-01T00:00:00Z",
                 "updated_at": "0001-01-01T00:00:00Z",
-                "deleted_at": "0001-01-01T00:00:00Z"
+                "deleted_at": null,
+                "schemaVersion": ""
               },
               "connection_id": "00000000-0000-0000-0000-000000000000",
               "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
                 "name": ""
               },
+              "subCategory": "",
+              "metadata": null,
               "model": {
                 "version": ""
               },
-              "components": null,
-              "relationships": null,
               "components_count": 0,
-              "relationships_count": 0
+              "relationships_count": 0,
+              "components": null,
+              "relationships": null
             },
             "patch": null
           },
@@ -560,6 +600,7 @@
             "id": null,
             "kind": "ClusterRoleBinding",
             "match": {},
+            "match_strategy_matrix": null,
             "model": {
               "id": "00000000-0000-0000-0000-000000000000",
               "schemaVersion": "",
@@ -570,27 +611,29 @@
               "registrant": {
                 "id": "00000000-0000-0000-0000-000000000000",
                 "name": "",
-                "credential_id": "00000000-0000-0000-0000-000000000000",
                 "type": "",
                 "sub_type": "",
                 "kind": "github",
                 "status": "",
-                "user_id": "00000000-0000-0000-0000-000000000000",
                 "created_at": "0001-01-01T00:00:00Z",
                 "updated_at": "0001-01-01T00:00:00Z",
-                "deleted_at": "0001-01-01T00:00:00Z"
+                "deleted_at": null,
+                "schemaVersion": ""
               },
               "connection_id": "00000000-0000-0000-0000-000000000000",
               "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
                 "name": ""
               },
+              "subCategory": "",
+              "metadata": null,
               "model": {
                 "version": ""
               },
-              "components": null,
-              "relationships": null,
               "components_count": 0,
-              "relationships_count": 0
+              "relationships_count": 0,
+              "components": null,
+              "relationships": null
             },
             "patch": null
           },
@@ -598,6 +641,7 @@
             "id": null,
             "kind": "RoleBinding",
             "match": {},
+            "match_strategy_matrix": null,
             "model": {
               "id": "00000000-0000-0000-0000-000000000000",
               "schemaVersion": "",
@@ -608,27 +652,29 @@
               "registrant": {
                 "id": "00000000-0000-0000-0000-000000000000",
                 "name": "",
-                "credential_id": "00000000-0000-0000-0000-000000000000",
                 "type": "",
                 "sub_type": "",
                 "kind": "github",
                 "status": "",
-                "user_id": "00000000-0000-0000-0000-000000000000",
                 "created_at": "0001-01-01T00:00:00Z",
                 "updated_at": "0001-01-01T00:00:00Z",
-                "deleted_at": "0001-01-01T00:00:00Z"
+                "deleted_at": null,
+                "schemaVersion": ""
               },
               "connection_id": "00000000-0000-0000-0000-000000000000",
               "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
                 "name": ""
               },
+              "subCategory": "",
+              "metadata": null,
               "model": {
                 "version": ""
               },
-              "components": null,
-              "relationships": null,
               "components_count": 0,
-              "relationships_count": 0
+              "relationships_count": 0,
+              "components": null,
+              "relationships": null
             },
             "patch": null
           }

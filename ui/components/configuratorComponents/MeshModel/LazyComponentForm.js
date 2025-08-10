@@ -5,15 +5,13 @@ import {
   CircularProgress,
   Typography,
   styled,
-} from '@layer5/sistent';
+} from '@sistent/sistent';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { isEmpty } from 'lodash';
 import React from 'react';
 import { getMeshModelComponent } from '../../../api/meshmodel';
 import { iconMedium } from '../../../css/icons.styles';
 import PatternServiceForm from '../../MesheryMeshInterface/PatternServiceForm';
-// eslint-disable-next-line no-unused-vars
-import * as Types from '../MeshModel/hooks/types';
 import { useNotification } from '../../../utils/hooks/useNotification';
 import { EVENT_TYPES } from '../../../lib/event-types';
 
